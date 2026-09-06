@@ -93,7 +93,7 @@ export function Home({ onLogin }: { onLogin: () => void }) {
 </div>
         <div className="flex items-center gap-3">
           <button onClick={onLogin} className="text-sm text-white/50 hover:text-white transition-colors px-3 py-2">
-            IngresarRR
+            Ingresar
           </button>
           <button
             onClick={() => window.location.href = 'https://www.teusec.com/register'}
