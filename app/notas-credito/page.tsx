@@ -29,9 +29,6 @@ interface Pagination {
   page: number; limit: number; total: number; totalPages: number
 }
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
 function getUser(): any {
   try {
     const saasAuth = localStorage.getItem('saas_auth')
@@ -78,7 +75,7 @@ export default function NotasCreditoPage() {
     setLoading(true); setError('')
     try {
       const res  = await fetch(`${API_URL}/credit-notes?page=${page}&limit=20`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const data = await res.json()
       const payload = data.data ?? data
@@ -98,7 +95,7 @@ export default function NotasCreditoPage() {
     setDownloading(note.id + '-xml')
     try {
       const res = await fetch(`${API_URL}/credit-notes/${note.id}/xml`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       if (!res.ok) throw new Error('Error al descargar XML')
       const blob = await res.blob()

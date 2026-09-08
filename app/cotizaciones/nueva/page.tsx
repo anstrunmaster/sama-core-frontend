@@ -16,11 +16,6 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  if (typeof window === 'undefined') return ''
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 interface CustomerOption {
   id: string
   name: string
@@ -114,7 +109,7 @@ export default function NuevaCotizacionPage() {
   // ── Cargar clientes e inventario al inicio ────────────────────────────────
   useEffect(() => {
     fetch(`${API_URL}/customers?limit=500`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
+      credentials: 'include',
     })
       .then(r => r.json())
       .then(d => {
@@ -125,7 +120,7 @@ export default function NuevaCotizacionPage() {
 
     // FIX #5: cachear inventario una vez al cargar la página
     fetch(`${API_URL}/inventory`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
+      credentials: 'include',
     })
       .then(r => r.json())
       .then(d => setInventoryCache(d.data || []))
@@ -240,7 +235,8 @@ export default function NuevaCotizacionPage() {
     try {
       const res = await fetch(`${API_URL}/customers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           identificationType: newCustomer.identification_type,
           identification:     newCustomer.identification,
@@ -280,7 +276,8 @@ export default function NuevaCotizacionPage() {
     try {
       await fetch(`${API_URL}/customers/${customerId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name:    buyerName    || undefined,
           email:   buyerEmail   || undefined,
@@ -308,7 +305,7 @@ export default function NuevaCotizacionPage() {
     setProductSearchLoading(l => ({ ...l, [dropdownKey]: true }))
     try {
       const res = await fetch(`${API_URL}/products?search=${encodeURIComponent(query)}&limit=8`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const prodData = await res.json()
       const rawItems = prodData.data?.items || prodData.data?.data || []

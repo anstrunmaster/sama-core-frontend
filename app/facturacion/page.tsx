@@ -7,10 +7,6 @@ import { Upload, X, Eye, EyeOff, CheckCircle2, AlertTriangle, RefreshCw } from '
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 export default function FacturacionPage() {
   const [certOk, setCertOk]       = useState<boolean | null>(null)
   const [checking, setChecking]   = useState(true)
@@ -33,7 +29,7 @@ const checkCert = async () => {
   setChecking(true)
   try {
     const res  = await fetch(`${API_URL}/certificates/status`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
+      credentials: 'include',
     })
     const data = await res.json()
     const payload = data.data ?? data
@@ -71,7 +67,7 @@ const checkCert = async () => {
       formData.append('password', password)
       const res  = await fetch(`${API_URL}/certificates/upload`, {
         method:  'POST',
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
         body:    formData,
       })
       const data    = await res.json()

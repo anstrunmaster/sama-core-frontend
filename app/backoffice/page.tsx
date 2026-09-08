@@ -9,9 +9,6 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
 function getUser(): any {
   try {
     const s = localStorage.getItem('saas_auth')
@@ -162,7 +159,7 @@ export default function BackOfficePage() {
     setError('')
     try {
       const res  = await fetch(`${API_URL}/tenants?limit=100`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message?.[0] ?? 'Error al cargar')
@@ -190,7 +187,8 @@ export default function BackOfficePage() {
     try {
       const res  = await fetch(`${API_URL}/tenants/${tenantId}/status`, {
         method:  'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ status: newStatus }),
       })
       const data = await res.json()

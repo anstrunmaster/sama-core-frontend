@@ -10,10 +10,6 @@ import { useQueryClient } from '@tanstack/react-query'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 const ROLES = [
   { value: 'ADMIN',      label: 'Administrador' },
   { value: 'MANAGER',    label: 'Gerente de sucursal' },
@@ -128,12 +124,12 @@ export function EditUserModal({ user, onClose }: { user: User | null; onClose: (
 
     // Cargar sucursales
     fetch(`${API_URL}/branches`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
+      credentials: 'include',
     }).then(r => r.json()).then(d => setBranches(d.data ?? [])).catch(() => {})
 
 // Cargar permisos actuales del usuario
 fetch(`${API_URL}/users/${user.id}/permissions`, {
-  headers: { Authorization: `Bearer ${getToken()}` }
+  credentials: 'include',
 })
   .then(r => r.json())
   .then(d => {
@@ -191,7 +187,8 @@ fetch(`${API_URL}/users/${user.id}/permissions`, {
     try {
       await fetch(`${API_URL}/users/${user.id}/permissions`, {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ modules: permissions }),
       })
     } catch {}

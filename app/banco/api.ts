@@ -11,10 +11,6 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 export class ApiError extends Error {
   constructor(message: string, public statusCode: number) {
     super(message)
@@ -27,9 +23,9 @@ async function request<T>(
 ): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
       ...(init?.headers || {}),
     },
   })

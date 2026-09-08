@@ -28,11 +28,6 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  if (typeof window === 'undefined') return ''
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 // issue_date llega como 'YYYY-MM-DD'; new Date() lo interpreta en UTC y en
 // Guayaquil (UTC-5) restaria un dia. Se formatea sin pasar por timezone.
 function fmtDateOnly(iso: string): string {
@@ -121,7 +116,7 @@ export default function PurchaseDetailPage() {
         .getReceipts(purchaseId)
         .catch(() => [] as PurchaseReceipt[]),
       fetch(`${API_URL}/warehouses?is_active=true`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
         .then(r => r.json())
         .then(d => {
@@ -152,7 +147,7 @@ export default function PurchaseDetailPage() {
   const loadWithholdings = async (purchaseId: string) => {
     try {
       const res = await fetch(`${API_URL}/withholdings?purchase_id=${purchaseId}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const d = await res.json()
       const p = d.data ?? d
@@ -287,7 +282,8 @@ export default function PurchaseDetailPage() {
     try {
       const res = await fetch(`${API_URL}/withholdings/from-purchase/${purchase.id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
       })
       const data = await res.json()
       if (!res.ok) {
@@ -1425,15 +1421,10 @@ async function fetchBankAccounts(): Promise<BankAccountLite[]> {
     process.env.NEXT_PUBLIC_API_URL ||
     'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-  const token =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-      : ''
-
   const res = await fetch(`${API_URL}/bank/accounts`, {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   })
 

@@ -11,10 +11,6 @@ import type { Withholding } from '@/types/withholding'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 function num(v: any): number {
   if (typeof v === 'number') return v
   if (typeof v === 'string') return parseFloat(v)
@@ -35,7 +31,8 @@ function fmtMoney(v: any): string {
 async function postAction(id: string, action: string): Promise<Withholding> {
   const res = await fetch(`${API_URL}/withholdings/${id}/${action}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
   })
   const data = await res.json()
   if (!res.ok) throw new Error((Array.isArray(data.message) ? data.message[0] : data.message) || 'Error')
@@ -45,7 +42,8 @@ async function postAction(id: string, action: string): Promise<Withholding> {
 async function voidAction(id: string, reason: string): Promise<Withholding> {
   const res = await fetch(`${API_URL}/withholdings/${id}/void`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reason }),
   })
   const data = await res.json()
@@ -70,7 +68,7 @@ export default function WithholdingDetailPage() {
     setError('')
     try {
       const res = await fetch(`${API_URL}/withholdings/${id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'No se pudo cargar')
@@ -155,7 +153,7 @@ export default function WithholdingDetailPage() {
     onClick={async () => {
       try {
         const res = await fetch(`${API_URL}/withholdings/${doc.id}/ride.pdf`, {
-          headers: { Authorization: `Bearer ${getToken()}` },
+          credentials: 'include',
         })
         if (!res.ok) throw new Error('Error al descargar el RIDE')
         const blob = await res.blob()

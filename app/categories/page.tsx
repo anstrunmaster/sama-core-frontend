@@ -10,19 +10,12 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  if (typeof window === 'undefined') return ''
-  try {
-    return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-  } catch { return '' }
-}
-
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
       ...(init?.headers ?? {}),
     },
   })

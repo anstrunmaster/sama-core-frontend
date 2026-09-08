@@ -9,10 +9,6 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 type EmploymentStatus = 'ACTIVO' | 'SUSPENDIDO' | 'VACACIONES' | 'DESVINCULADO'
 
 interface Department { id: string; name: string; code: string }
@@ -122,7 +118,7 @@ export default function EmpleadoDetallePage() {
     setError('')
     try {
       const res = await fetch(`${API_URL}/rrhh/employees/${id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const data = await res.json()
       if (!res.ok) {
@@ -142,11 +138,11 @@ export default function EmpleadoDetallePage() {
   useEffect(() => { if (id) load() }, [id, load])
 
   useEffect(() => {
-    fetch(`${API_URL}/rrhh/departments`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    fetch(`${API_URL}/rrhh/departments`, { credentials: 'include' })
       .then((r) => r.json()).then((d) => setDepartments(Array.isArray(d.data ?? d) ? (d.data ?? d) : [])).catch(() => {})
-    fetch(`${API_URL}/rrhh/positions`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    fetch(`${API_URL}/rrhh/positions`, { credentials: 'include' })
       .then((r) => r.json()).then((d) => setPositions(Array.isArray(d.data ?? d) ? (d.data ?? d) : [])).catch(() => {})
-    fetch(`${API_URL}/rrhh/employees?limit=100`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    fetch(`${API_URL}/rrhh/employees?limit=100`, { credentials: 'include' })
       .then((r) => r.json()).then((d) => {
         const payload = d.data ?? d
         setSupervisors(Array.isArray(payload.data) ? payload.data : [])
@@ -206,7 +202,8 @@ export default function EmpleadoDetallePage() {
       }
       const res = await fetch(`${API_URL}/rrhh/employees/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       const data = await res.json()
@@ -230,7 +227,7 @@ export default function EmpleadoDetallePage() {
     try {
       const res = await fetch(`${API_URL}/rrhh/employees/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       if (!res.ok) { alert('No se pudo desvincular'); return }
       router.push('/rrhh/empleados')

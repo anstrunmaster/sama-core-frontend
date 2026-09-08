@@ -27,9 +27,6 @@ interface Item {
   taxRate: number
 }
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
 function getUser(): any {
   try {
     const s = localStorage.getItem('saas_auth')
@@ -71,7 +68,7 @@ export default function NuevoNotaCreditoPage() {
   setSearching(true)
   try {
     const res = await fetch(`${API_URL}/invoices?branchId=${branchId}&page=1&limit=10`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
+      credentials: 'include',
     })
     const data = await res.json()
     const all: InvoiceOption[] = data.data?.data ?? data.data ?? []
@@ -123,7 +120,8 @@ export default function NuevoNotaCreditoPage() {
     try {
       const res = await fetch(`${API_URL}/credit-notes`, {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           invoiceId: selectedInvoice.id,
           motivo:    motivo.trim(),

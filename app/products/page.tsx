@@ -26,14 +26,6 @@ interface Category {
   name:          string
   category_type: string
 }
-function getToken(): string {
-  if (typeof window === 'undefined') return ''
-  try {
-    return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-  } catch {
-    return ''
-  }
-}
 /**
  * Formato de moneda con punto para miles y coma para decimales: $1.234,56
  * (formato usado en Ecuador). Se define manualmente para garantizar el
@@ -327,7 +319,7 @@ function ProductsPageInner() {
       if (search)     params.set('search', search)
       if (typeFilter) params.set('type', typeFilter)
       const res  = await fetch(`${API_URL}/products?${params}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
@@ -351,7 +343,7 @@ function ProductsPageInner() {
   // Carga de categorías (una sola vez al montar la página)
   useEffect(() => {
     fetch(`${API_URL}/product-categories`, {
-      headers: { Authorization: `Bearer ${getToken()}` },
+      credentials: 'include',
     })
       .then(r => r.json())
       .then(d => setCategories(Array.isArray(d.data ?? d) ? (d.data ?? d) : []))
@@ -491,9 +483,9 @@ const url = editing
 const method = editing ? 'PATCH' : 'POST'
 const res = await fetch(url, {
   method,
+  credentials: 'include',
   headers: {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${getToken()}`,
   },
   body: JSON.stringify(body),
 })
@@ -518,7 +510,7 @@ if (!res.ok) {
     try {
       const res = await fetch(`${API_URL}/products/${id}`, {
         method:  'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))

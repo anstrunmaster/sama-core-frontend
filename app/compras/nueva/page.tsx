@@ -25,11 +25,6 @@ import { ModalProductos } from './components/ModalProductos'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  if (typeof window === 'undefined') return ''
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 interface UnresolvedLine {
   lineIndex: number
   description: string
@@ -191,7 +186,7 @@ export default function NuevaCompraPage() {
       if (m?.account_id) setExpenseAccountId(m.account_id)
     }).catch(() => {})
 
-    fetch(`${API_URL}/product-categories`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    fetch(`${API_URL}/product-categories`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => setCategories(Array.isArray(d.data ?? d) ? (d.data ?? d) : []))
       .catch(() => setCategories([]))
@@ -202,7 +197,7 @@ export default function NuevaCompraPage() {
     if (!q.trim()) { setProductResults([]); return }
     setSearchingProducts(true)
     try {
-      const res = await fetch(`${API_URL}/products?search=${encodeURIComponent(q)}&limit=10`, { headers: { Authorization: `Bearer ${getToken()}` } })
+      const res = await fetch(`${API_URL}/products?search=${encodeURIComponent(q)}&limit=10`, { credentials: 'include' })
       const data = await res.json()
       const payload = data.data ?? data
       setProductResults(Array.isArray(payload.items) ? payload.items : Array.isArray(payload) ? payload : [])
@@ -411,7 +406,8 @@ export default function NuevaCompraPage() {
     try {
       const res = await fetch(`${API_URL}/products`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           code: newProductForm.code.toUpperCase(), name: newProductForm.name,
           type: newProductForm.type, price: parseFloat(newProductForm.price),

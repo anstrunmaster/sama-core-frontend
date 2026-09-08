@@ -5,10 +5,6 @@ import { useRouter } from 'next/navigation'
 import { ChevronLeft, Plus, Trash2, RefreshCw } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
-
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
 function num(v: any): number {
   if (typeof v === 'number') return v
   if (typeof v === 'string') return parseFloat(v)
@@ -42,8 +38,8 @@ export default function CargosPage() {
     setLoading(true)
     try {
       const [posRes, depRes] = await Promise.all([
-        fetch(`${API_URL}/rrhh/positions`, { headers: { Authorization: `Bearer ${getToken()}` } }),
-        fetch(`${API_URL}/rrhh/departments`, { headers: { Authorization: `Bearer ${getToken()}` } }),
+        fetch(`${API_URL}/rrhh/positions`, { credentials: 'include' }),
+        fetch(`${API_URL}/rrhh/departments`, { credentials: 'include' }),
       ])
       const posData = await posRes.json()
       const depData = await depRes.json()
@@ -77,7 +73,8 @@ export default function CargosPage() {
       }
       const res = await fetch(`${API_URL}/rrhh/positions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       const data = await res.json()
@@ -101,7 +98,7 @@ export default function CargosPage() {
     try {
       const res = await fetch(`${API_URL}/rrhh/positions/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const data = await res.json()
       if (!res.ok) {

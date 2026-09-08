@@ -62,10 +62,6 @@ interface ReconciledMovement {
   } | null
 }
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 function getUser(): any {
   try {
     const saasAuth = localStorage.getItem('saas_auth')
@@ -136,7 +132,7 @@ export default function FacturasPage() {
     try {
       const res = await fetch(
         `${API_URL}/accounting/journal-entries?source=MANUAL&search=${p.id}&limit=1`,
-        { headers: { Authorization: `Bearer ${getToken()}` } }
+        { credentials: 'include' }
       )
       const data = await res.json()
       const entries = data.data?.data ?? data.data ?? []
@@ -155,7 +151,7 @@ export default function FacturasPage() {
     try {
       const res = await fetch(
         `${API_URL}/invoices?branchId=${branchId}&page=${page}&limit=20`,
-        { headers: { Authorization: `Bearer ${getToken()}` } }
+        { credentials: 'include' }
       )
       const data = await res.json()
       const payload = data.data ?? data
@@ -175,7 +171,7 @@ export default function FacturasPage() {
   const fetchAllWithholdings = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/received-withholdings/all`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       if (!res.ok) return
       const data = await res.json()
@@ -192,7 +188,7 @@ export default function FacturasPage() {
   const fetchAllPayments = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/bank/movements?status=RECONCILED&limit=200`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       if (!res.ok) return
       const data = await res.json()
@@ -252,7 +248,7 @@ export default function FacturasPage() {
     setRetentionError('')
     try {
       const res = await fetch(`${API_URL}/received-withholdings/invoices/${inv.id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const data = await res.json()
       const list = Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : []
@@ -285,7 +281,8 @@ export default function FacturasPage() {
     try {
       const res = await fetch(`${API_URL}/received-withholdings/invoices/${retentionModal.id}/attach`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ xml_content: retentionXml }),
       })
       const data = await res.json()
@@ -317,7 +314,7 @@ export default function FacturasPage() {
     setDownloading(inv.access_key + '-pdf')
     try {
       const res = await fetch(`${API_URL}/invoices/${inv.access_key}/pdf`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const contentType = res.headers.get('content-type') || ''
       if (contentType.includes('application/json')) {
@@ -345,7 +342,7 @@ export default function FacturasPage() {
     setDownloading(inv.access_key + '-xml')
     try {
       const res = await fetch(`${API_URL}/invoices/${inv.access_key}/xml`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       if (!res.ok) throw new Error('Error al descargar XML')
       const blob = await res.blob()
@@ -370,7 +367,7 @@ export default function FacturasPage() {
     try {
       const res = await fetch(`${API_URL}/invoices/${inv.access_key}/send-email`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const data = await res.json()
       const payload = data.data ?? data
@@ -1461,7 +1458,7 @@ function CollectInvoiceModal({ inv, onClose, onSuccess }: CollectInvoiceModalPro
   // Cargar cuentas bancarias al abrir
   useEffect(() => {
     fetch(`${API_URL}/bank/accounts?limit=50`, {
-      headers: { Authorization: `Bearer ${getToken()}` },
+      credentials: 'include',
     })
       .then(r => r.json())
       .then(d => {
@@ -1488,9 +1485,9 @@ function CollectInvoiceModal({ inv, onClose, onSuccess }: CollectInvoiceModalPro
     try {
       const res = await fetch(`${API_URL}/bank/collect-invoice`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
         },
         body: JSON.stringify({
           invoice_id:      inv.id,

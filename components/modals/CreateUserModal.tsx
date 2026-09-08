@@ -9,10 +9,6 @@ import { Spinner } from '@/components/ui/Spinner'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 const schema = z.object({
   email:     z.string().email('Email inválido'),
   name:      z.string().min(2, 'Mínimo 2 caracteres'),
@@ -43,7 +39,7 @@ export function CreateUserModal({ open, onClose }: { open: boolean; onClose: () 
   useEffect(() => {
     if (!open) return
     fetch(`${API_URL}/branches`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
+      credentials: 'include',
     })
       .then(r => r.json())
       .then(d => setBranches(d.data ?? []))

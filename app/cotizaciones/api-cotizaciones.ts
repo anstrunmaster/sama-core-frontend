@@ -7,16 +7,12 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization:  `Bearer ${getToken()}`,
       ...options.headers,
     },
   })

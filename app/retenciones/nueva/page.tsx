@@ -7,10 +7,6 @@ import type { SriConcept, WithholdingTaxType } from '@/types/withholding'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 interface LineDraft {
   tax_type: WithholdingTaxType
   concept_code: string
@@ -81,7 +77,7 @@ export default function NewWithholdingPage() {
   const fetchConcepts = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/withholdings/concepts`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const data = await res.json()
       const p = data.data ?? data
@@ -93,7 +89,7 @@ export default function NewWithholdingPage() {
     try {
       // Endpoint estándar de proveedores; si el path difiere ajustar acá.
       const res = await fetch(`${API_URL}/suppliers?limit=200`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const data = await res.json()
       const p = data.data ?? data
@@ -176,7 +172,8 @@ export default function NewWithholdingPage() {
       }
       const res = await fetch(`${API_URL}/withholdings`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       const data = await res.json()

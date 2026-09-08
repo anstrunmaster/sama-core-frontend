@@ -11,10 +11,6 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 function num(v: any): number {
   if (!v) return 0
   if (typeof v === 'number') return v
@@ -57,7 +53,7 @@ export default function NominaPage() {
     setError('')
     try {
       const res = await fetch(`${API_URL}/rrhh/payroll/periods`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const data = await res.json()
       setPeriods(data.data ?? data)
@@ -71,7 +67,7 @@ export default function NominaPage() {
   async function loadSummary(periodId: string) {
     try {
       const res = await fetch(`${API_URL}/rrhh/payroll/periods/${periodId}/summary`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const data = await res.json()
       setSummary(data.data ?? data)
@@ -86,7 +82,7 @@ export default function NominaPage() {
     // Cargar detalle con runs
     try {
       const res = await fetch(`${API_URL}/rrhh/payroll/periods/${period.id}`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const data = await res.json()
       setDetallePeriodo(data.data ?? data)
@@ -99,7 +95,8 @@ export default function NominaPage() {
     try {
       const res = await fetch(`${API_URL}/rrhh/payroll/periods`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ year: newYear, month: newMonth })
       })
       const data = await res.json()
@@ -122,7 +119,8 @@ export default function NominaPage() {
     try {
       const res = await fetch(`${API_URL}/rrhh/payroll/periods/${selected.id}/generate`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
       })
       const data = await res.json()
@@ -145,7 +143,7 @@ export default function NominaPage() {
     try {
       const res = await fetch(`${API_URL}/rrhh/payroll/periods/${selected.id}/${action}`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const data = await res.json()
       if (!res.ok) throw new Error(Array.isArray(data.message) ? data.message[0] : data.message)

@@ -34,10 +34,6 @@ const ID_TYPE_LABEL: Record<string, string> = {
   '07': 'Consumidor Final',
 }
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 function fmtDate(d?: string) {
   if (!d) return '—'
   try {
@@ -86,7 +82,7 @@ export default function ClientesPage() {
     try {
       const params = new URLSearchParams({ page: String(page), limit: '20', ...(q ? { search: q } : {}) })
       const res = await fetch(`${API_URL}/customers?${params}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const data = await res.json()
       const payload = data.data ?? data
@@ -103,14 +99,14 @@ export default function ClientesPage() {
 
   useEffect(() => {
     fetch(`${API_URL}/accounting/accounts?only_movement=true&account_type=ASSET`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
+      credentials: 'include',
     })
       .then(r => r.json())
       .then(d => setAccountingAccounts(Array.isArray(d.data) ? d.data : []))
       .catch(() => setAccountingAccounts([]))
 
     fetch(`${API_URL}/accounting/mappings`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
+      credentials: 'include',
     })
       .then(r => r.json())
       .then(d => {
@@ -199,7 +195,7 @@ export default function ClientesPage() {
       try {
         const checkRes = await fetch(
           `${API_URL}/customers/identification?identification=${form.identification}`,
-          { headers: { Authorization: `Bearer ${getToken()}` } }
+          { credentials: 'include' }
         )
         const checkData = await checkRes.json()
         const checkPayload = checkData.data ?? checkData
@@ -236,7 +232,8 @@ export default function ClientesPage() {
           }
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       const data = await res.json()
@@ -258,7 +255,7 @@ export default function ClientesPage() {
     try {
       const res = await fetch(`${API_URL}/customers/${deleteTarget.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       if (!res.ok) throw new Error('Error al eliminar')
       setDeleteTarget(null)

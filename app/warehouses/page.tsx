@@ -19,10 +19,6 @@ interface WarehouseItem {
   created_at:  string
 }
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 function getUser(): any {
   try {
     const s = localStorage.getItem('saas_auth')
@@ -51,7 +47,8 @@ export default function WarehousesPage() {
     setError('')
     try {
       const res  = await fetch(`${API_URL}/warehouses`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+          credentials: 'include',
       })
       const data = await res.json()
       const payload = data.data ?? data
@@ -82,9 +79,9 @@ export default function WarehousesPage() {
     try {
       const res = await fetch(`${API_URL}/warehouses`, {
         method:  'POST',
+          credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization:  `Bearer ${getToken()}`,
         },
         body: JSON.stringify({
           name:        form.name,

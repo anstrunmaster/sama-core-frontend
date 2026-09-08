@@ -11,10 +11,6 @@ import type { Withholding, WithholdingStatus } from '@/types/withholding'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 function num(v: any): number {
   if (typeof v === 'number') return v
   if (typeof v === 'string') return parseFloat(v)
@@ -63,7 +59,7 @@ export default function WithholdingsPage() {
       if (fiscalPeriod) params.set('fiscal_period', fiscalPeriod)
 
       const res = await fetch(`${API_URL}/withholdings?${params}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const data = await res.json()
       const p = data.data ?? data

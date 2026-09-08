@@ -6,10 +6,6 @@ import type { BankAccount, BankMovementDirection } from '../types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return (typeof window !== 'undefined' ? localStorage.getItem('_at') || localStorage.getItem('accessToken') : '') || ''
-}
-
 interface Props {
   open: boolean
   onClose: () => void
@@ -60,7 +56,7 @@ export function BankMovementModal({ open, onClose, accounts, onSaved }: Props) {
   // Cargar cuentas contables
   useEffect(() => {
     fetch(`${API_URL}/accounting/accounts?only_movement=true`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
+      credentials: 'include',
     })
       .then(r => r.json())
       .then(d => setAccountOptions(Array.isArray(d.data) ? d.data : []))

@@ -7,10 +7,6 @@ import { ChevronLeft, Plus, ChevronRight, Users, RefreshCw } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 interface Department {
   id: string
   code: string
@@ -68,8 +64,8 @@ export default function OrganigramaPage() {
     setLoading(true)
     try {
       const [treeRes, flatRes] = await Promise.all([
-        fetch(`${API_URL}/rrhh/departments/tree`, { headers: { Authorization: `Bearer ${getToken()}` } }),
-        fetch(`${API_URL}/rrhh/departments`, { headers: { Authorization: `Bearer ${getToken()}` } }),
+          fetch(`${API_URL}/rrhh/departments/tree`, { credentials: 'include' }),
+          fetch(`${API_URL}/rrhh/departments`, { credentials: 'include' }),
       ])
       const treeData = await treeRes.json()
       const flatData = await flatRes.json()
@@ -102,7 +98,10 @@ export default function OrganigramaPage() {
       }
       const res = await fetch(`${API_URL}/rrhh/departments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       const data = await res.json()

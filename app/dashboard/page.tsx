@@ -10,10 +10,6 @@ import { AiInsightsPanel } from './ai-insights/AiInsightsPanel'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 function getUser(): any {
   try {
     const s = localStorage.getItem('saas_auth')
@@ -240,7 +236,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!isAdmin) return
     fetch(`${API_URL}/branches`, {
-      headers: { Authorization: `Bearer ${getToken()}` },
+      credentials: 'include',
     })
       .then(r => r.json())
       .then(d => setBranches(d.data ?? []))
@@ -264,7 +260,7 @@ export default function DashboardPage() {
       // Construir URL con o sin filtro de sucursal
       const branchParam = branchId ? `&branchId=${branchId}` : ''
       const res  = await fetch(`${API_URL}/invoices?page=1&limit=500${branchParam}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const json = await res.json()
       const payload  = json.data ?? json
@@ -338,7 +334,7 @@ export default function DashboardPage() {
       // Certificado
       try {
         const certRes  = await fetch(`${API_URL}/certificates/status`, {
-          headers: { Authorization: `Bearer ${getToken()}` },
+          credentials: 'include',
         })
         const certJson = await certRes.json()
         const cert = certJson.data?.certificate ?? certJson.certificate

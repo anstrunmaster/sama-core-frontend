@@ -23,10 +23,6 @@ const API_URL =
 /** Polling cada 5 minutos. */
 const POLLING_INTERVAL_MS = 5 * 60 * 1000
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 export function useAiInsights(): AiInsightsState {
   const [recommendations, setRecommendations] =
     useState<RecommendationsResponse | null>(null)
@@ -44,25 +40,17 @@ export function useAiInsights(): AiInsightsState {
     if (inFlightRef.current) return // ya hay un fetch corriendo
     inFlightRef.current = true
 
-    const token = getToken()
-    if (!token) {
-      setError('Sesión no válida')
-      setLoading(false)
-      inFlightRef.current = false
-      return
-    }
-
     setError(null)
 
     try {
       const [recsRes, anomaliesRes] = await Promise.allSettled([
         fetch(`${AI_URL}/api/v1/recommendations?lookback_hours=48`, {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
         }),
         fetch(`${AI_URL}/api/v1/detect/anomalies`, {
           method: 'POST',
+          credentials: 'include',
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ lookback_days: 30 }),
@@ -102,14 +90,11 @@ export function useAiInsights(): AiInsightsState {
    */
   const acknowledgeAlert = useCallback(
     async (alertId: string): Promise<boolean> => {
-      const token = getToken()
-      if (!token) return false
-
       try {
         const res = await fetch(`${API_URL}/ai-alerts/${alertId}/ack`, {
           method: 'PATCH',
+          credentials: 'include',
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         })

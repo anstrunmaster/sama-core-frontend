@@ -29,10 +29,6 @@ interface IngresoLine {
   notes:      string
 }
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 function stockBadge(qty: number) {
   if (qty <= 0) return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
   if (qty <= 5) return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
@@ -61,7 +57,7 @@ export default function InventoryPage() {
 
   const fetchWarehouses = useCallback(async () => {
     try {
-      const res  = await fetch(`${API_URL}/warehouses`, { headers: { Authorization: `Bearer ${getToken()}` } })
+      const res  = await fetch(`${API_URL}/warehouses`, { credentials: 'include' })
       const data = await res.json()
       const p = data.data ?? data
       setWarehouses(Array.isArray(p) ? p : [])
@@ -70,7 +66,7 @@ export default function InventoryPage() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const res  = await fetch(`${API_URL}/products?limit=100`, { headers: { Authorization: `Bearer ${getToken()}` } })
+      const res  = await fetch(`${API_URL}/products?limit=100`, { credentials: 'include' })
       const data = await res.json()
       const p = data.data ?? data
       const items = p.items ?? p
@@ -84,7 +80,7 @@ export default function InventoryPage() {
     try {
       const params = new URLSearchParams()
       if (warehouseFilter) params.set('warehouseId', warehouseFilter)
-      const res  = await fetch(`${API_URL}/inventory?${params}`, { headers: { Authorization: `Bearer ${getToken()}` } })
+      const res  = await fetch(`${API_URL}/inventory?${params}`, { credentials: 'include' })
       const data = await res.json()
       const p = data.data ?? data
       setInventory(Array.isArray(p) ? p : [])
@@ -125,7 +121,8 @@ export default function InventoryPage() {
       for (const line of validLines) {
         const res = await fetch(`${API_URL}/inventory-movements`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             product_id:   line.product_id,
             warehouse_id: modalWarehouse,

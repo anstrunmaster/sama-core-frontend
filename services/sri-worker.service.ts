@@ -24,10 +24,6 @@ const BASE = `${API}/sri`
 export const SRI_PORTAL_URL =
   'https://srienlinea.sri.gob.ec/tuportal-internet/accederAplicacion.jspa?redireccion=57&idGrupo=55'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 // ---------------------------------- tipos ----------------------------------
 
 export type DocType =
@@ -124,9 +120,9 @@ export class SriError extends Error {
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
       ...(init.headers || {}),
     },
   })

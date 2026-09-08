@@ -15,9 +15,6 @@ import {
 } from 'lucide-react'
 import type { Plan } from '@/types'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
 function getUser(): any {
   try {
     const s = localStorage.getItem('saas_auth')
@@ -136,7 +133,7 @@ export default function TenantsPage() {
     setBranchesLoading(true)
     try {
       const res  = await fetch(`${API_URL}/branches`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
       const json = await res.json()
       setBranches(json.data ?? [])
@@ -162,7 +159,7 @@ export default function TenantsPage() {
       })
       // Cargar secuencial actual
       fetch(`${API_URL}/branches/current`, {
-        headers: { Authorization: `Bearer ${getToken()}` }
+        credentials: 'include',
       })
         .then(r => r.json())
         .then(json => {
@@ -259,7 +256,10 @@ export default function TenantsPage() {
     try {
       const res = await fetch(`${API_URL}/branches/${branchId}/sequential`, {
         method:  'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ sequential: val }),
       })
       const json = await res.json()
@@ -291,7 +291,10 @@ export default function TenantsPage() {
       const method = isEdit ? 'PUT' : 'POST'
       const res    = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(branchForm),
       })
       const json = await res.json()
@@ -312,7 +315,8 @@ export default function TenantsPage() {
     try {
       const res  = await fetch(`${API_URL}/branches/${branchId}`, {
         method:  'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+          credentials: 'include',
       })
       const json = await res.json()
       if (json.success) { loadBranches() }

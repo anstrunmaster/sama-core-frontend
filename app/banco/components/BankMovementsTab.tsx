@@ -16,10 +16,6 @@ import { BankAdvanceModal } from './BankAdvanceModal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return (typeof window !== 'undefined' ? localStorage.getItem('_at') || localStorage.getItem('accessToken') : '') || ''
-}
-
 interface Props {
   accounts: BankAccount[]
   refreshKey: number
@@ -113,7 +109,7 @@ export function BankMovementsTab({ accounts, refreshKey, onChange }: Props) {
   // Cargar cuentas para el selector de edición
   useEffect(() => {
     fetch(`${API_URL}/accounting/accounts?only_movement=true`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
+      credentials: 'include',
     })
       .then(r => r.json())
       .then(d => setAccountOptions(Array.isArray(d.data) ? d.data : []))
@@ -126,7 +122,7 @@ export function BankMovementsTab({ accounts, refreshKey, onChange }: Props) {
     try {
       const res = await fetch(
         `${API_URL}/accounting/journal-entries?source=MANUAL&search=${movementId}&limit=1`,
-        { headers: { Authorization: `Bearer ${getToken()}` } }
+        { credentials: 'include' }
       )
       const data = await res.json()
       const entries = data.data?.data ?? data.data ?? []
@@ -165,7 +161,8 @@ const saveEditLine = async () => {
       if (!currentJournal) return
       await fetch(`${API_URL}/accounting/journal-entries/${currentJournal.id}/lines/${editingLine.lineId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ account_id: editAccountId }),
       })
       const movId = editingLine.movementId

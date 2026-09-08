@@ -10,10 +10,6 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 type EmploymentStatus = 'ACTIVO' | 'SUSPENDIDO' | 'VACACIONES' | 'DESVINCULADO'
 
 interface Department { id: string; code: string; name: string }
@@ -89,7 +85,7 @@ export default function EmpleadosPage() {
       params.set('limit', '20')
 
       const res = await fetch(`${API_URL}/rrhh/employees?${params}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        credentials: 'include',
       })
       const data = await res.json()
       const payload = data.data ?? data
@@ -110,14 +106,14 @@ export default function EmpleadosPage() {
 
   // Cargar departamentos y cargos (para los selects del modal y el filtro)
   useEffect(() => {
-    fetch(`${API_URL}/rrhh/departments`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    fetch(`${API_URL}/rrhh/departments`, { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => {
         const payload = d.data ?? d
         setDepartments(Array.isArray(payload) ? payload : [])
       })
       .catch(() => {})
-    fetch(`${API_URL}/rrhh/positions`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    fetch(`${API_URL}/rrhh/positions`, { credentials: 'include' })
       .then((r) => r.json())
       .then((d) => {
         const payload = d.data ?? d
@@ -155,9 +151,9 @@ export default function EmpleadosPage() {
       }
       const res = await fetch(`${API_URL}/rrhh/employees`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
         },
         body: JSON.stringify(body),
       })

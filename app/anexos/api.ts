@@ -8,10 +8,6 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
 
-function getToken(): string {
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || ''
-}
-
 export class ApiError extends Error {
   constructor(message: string, public statusCode: number) { super(message) }
 }
@@ -26,9 +22,9 @@ async function get<T>(path: string, params?: Record<string, any>): Promise<T> {
 
   const url = `${API_URL}${path}${q ? `?${q}` : ''}`
   const res = await fetch(url, {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
     },
   })
 
@@ -53,7 +49,7 @@ export const taxReportsApi = {
   form103: async (period: TaxPeriod) => {
   const res = await fetch(
     `${API_URL}/tax-reports/form-103?year=${period.year}&month=${period.month}`,
-    { headers: { Authorization: `Bearer ${getToken()}` } }
+    { credentials: 'include' }
   )
   const data = await res.json()
   return data.data ?? data
@@ -73,7 +69,7 @@ export const taxReportsApi = {
     }).toString()
 
     const res = await fetch(`${API_URL}/tax-reports/ats?${q}`, {
-      headers: { Authorization: `Bearer ${getToken()}` },
+      credentials: 'include',
     })
 
     if (!res.ok) {

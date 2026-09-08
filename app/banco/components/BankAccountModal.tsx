@@ -49,7 +49,7 @@ export function BankAccountModal({ open, onClose, account, onSaved }: Props) {
   setError('')
   // Cargar cuentas contables tipo hoja
   fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'}/accounting/accounts?only_movement=true`, {
-    headers: { Authorization: `Bearer ${typeof window !== 'undefined' ? (localStorage.getItem('_at') || localStorage.getItem('accessToken') || '') : ''}` }
+    credentials: 'include',
   })
     .then(r => r.json())
     .then(d => {
