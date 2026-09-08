@@ -2,7 +2,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
-import { tok } from '@/services/api';
 
 const INVOICES_URL = process.env.NEXT_PUBLIC_INVOICES_URL || 'https://main.d2n0xc418in8nz.amplifyapp.com/';
 
@@ -41,13 +40,9 @@ export default function BillingIframe() {
   }, []); // ← sin dependencias — usa ref
 
   const handleTokenRefresh = useCallback(async () => {
-    const refreshToken = tok.getR();
-    if (!refreshToken) return;
     try {
-      const tokens = await authService.refresh(refreshToken);
-      tok.setA(tokens.accessToken);
-      tok.setR(tokens.refreshToken);
-      sendAuthData(tokens.accessToken);
+      await authService.refresh();
+      sendAuthData();
     } catch (error) {
       console.error('Failed to refresh token:', error);
     }
