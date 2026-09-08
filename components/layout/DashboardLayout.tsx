@@ -22,12 +22,19 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     fetch(`${API_URL}/certificates/status`, {
       credentials: 'include',
     })
-      .then(r => r.json())
+      .then(r => {
+        if (r.status === 401 || r.status === 403) {
+          setCertOk(null)
+          return
+        }
+        return r.json()
+      })
       .then(d => {
+        if (!d) return
         const payload = d.data ?? d
         setCertOk(payload.hasActiveCertificate === true)
       })
-      .catch(() => setCertOk(false))
+      .catch(() => setCertOk(null))
   }, [authed])
 
   if (!hydrated) return null
