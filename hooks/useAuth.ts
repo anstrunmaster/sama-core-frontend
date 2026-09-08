@@ -13,8 +13,8 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     setLoading(true)
     try {
-      const tokens = await authService.login(email, password)
-      setUser(tokens.user, tokens.accessToken, tokens.refreshToken)
+      const result = await authService.login(email, password)
+      setUser(result.user)
       router.replace('/facturacion')
     } catch (e: any) {
       const msg = e?.response?.data?.message

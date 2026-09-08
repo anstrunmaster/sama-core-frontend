@@ -1,32 +1,18 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+import { clearCsrfToken, getCsrfToken } from '@/app/lib/csrf'
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3002/api/v1'
-
-// ── Token helpers (localStorage — SSR-safe) ───────────────────────────────────
-export const tok = {
-  getA:  (): string | null => (typeof window !== 'undefined' ? localStorage.getItem('_at') : null),
-  getR:  (): string | null => (typeof window !== 'undefined' ? localStorage.getItem('_rt') : null),
-  setA:  (t: string) => localStorage.setItem('_at', t),
-  setR:  (t: string) => localStorage.setItem('_rt', t),
-  clear: ()          => { localStorage.removeItem('_at'); localStorage.removeItem('_rt') },
-}
 
 // ── Axios instance ────────────────────────────────────────────────────────────
 export const api = axios.create({
   baseURL: BASE,
   timeout: 12_000,
   headers: { 'Content-Type': 'application/json' },
-})
-
-// ── Request: attach Bearer ────────────────────────────────────────────────────
-api.interceptors.request.use((cfg: InternalAxiosRequestConfig) => {
-  const t = tok.getA()
-  if (t) cfg.headers.Authorization = `Bearer ${t}`
-  return cfg
+  withCredentials: true,
 })
 
 // ── Response: auto-refresh on 401 ────────────────────────────────────────────
-type Queued = { resolve: (t: string) => void; reject: (e: unknown) => void }
+type Queued = { resolve: () => void; reject: (e: unknown) => void }
 let refreshing = false
 let queue: Queued[] = []
 
@@ -39,13 +25,11 @@ api.interceptors.response.use(
     }
 
     original._r = true
-    const rt = tok.getR()
-    if (!rt) { tok.clear(); redirect(); return Promise.reject(err) }
 
     if (refreshing) {
       return new Promise((resolve, reject) => {
         queue.push({
-          resolve: (t) => { original.headers.Authorization = `Bearer ${t}`; resolve(api(original)) },
+          resolve: () => resolve(api(original)),
           reject,
         })
       })
@@ -53,16 +37,16 @@ api.interceptors.response.use(
 
     refreshing = true
     try {
-      const { data } = await axios.post(`${BASE}/auth/refresh`, { refreshToken: rt })
-      const at: string = data.data.accessToken
-      const newRt: string = data.data.refreshToken ?? rt
-      tok.setA(at); tok.setR(newRt)
-      queue.forEach(q => q.resolve(at)); queue = []
-      original.headers.Authorization = `Bearer ${at}`
+      const csrfToken = await getCsrfToken()
+      await api.post('/auth/refresh', null, {
+        headers: { 'X-CSRF-Token': csrfToken },
+      })
+      queue.forEach(q => q.resolve()); queue = []
       return api(original)
     } catch (e) {
+      clearCsrfToken()
       queue.forEach(q => q.reject(e)); queue = []
-      tok.clear(); redirect()
+      redirect()
       return Promise.reject(e)
     } finally {
       refreshing = false

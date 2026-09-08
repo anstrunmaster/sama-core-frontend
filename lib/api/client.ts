@@ -1,27 +1,24 @@
 // lib/api/client.ts
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1';
 
-function getToken(): string {
-  if (typeof window === 'undefined') return '';
-  return localStorage.getItem('_at') || localStorage.getItem('accessToken') || '';
-}
-
 /**
  * Wrapper de fetch que:
- *  - inyecta Authorization Bearer automáticamente
+ *  - envía cookies HttpOnly automáticamente
  *  - destrambuca el envelope { success, data } del TransformInterceptor
  *  - lanza Error con mensaje del backend en caso de fallo
  *  - soporta respuestas binarias (PDFs, etc.) devolviendo Blob
  */
 export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(init.headers as Record<string, string> | undefined),
   };
-  if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_URL}${path}`, { ...init, headers });
+  const res = await fetch(`${API_URL}${path}`, {
+    ...init,
+    credentials: 'include',
+    headers,
+  });
 
   if (!res.ok) {
     let msg = `${res.status} ${res.statusText}`;
@@ -38,4 +35,15 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
   }
   const body = await res.json();
   return (body?.data ?? body) as T;
+}
+
+export function apiFetch(url: string, init: RequestInit = {}) {
+  return fetch(url, {
+    ...init,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init.headers || {}),
+    },
+  });
 }

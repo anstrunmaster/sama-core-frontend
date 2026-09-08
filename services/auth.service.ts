@@ -1,16 +1,25 @@
 import { api } from './api'
-import type { AuthTokens, AuthUser, Session, AuditLog, PaginatedResponse, ApiResponse } from '@/types'
+import { getCsrfToken } from '@/app/lib/csrf'
+import type { AuthUser, Session, AuditLog, PaginatedResponse, ApiResponse } from '@/types'
 
 export const authService = {
   login:      (email: string, password: string) =>
-    api.post<ApiResponse<AuthTokens>>('/auth/login', { email, password }).then(r => r.data.data),
+    api.post<ApiResponse<{ user: AuthUser; expiresIn: string }>>('/auth/login', { email, password }).then(r => r.data.data),
 
-  refresh:    (refreshToken: string) =>
-    api.post<ApiResponse<AuthTokens>>('/auth/refresh', { refreshToken }).then(r => r.data.data),
+  refresh:    async () => {
+    const csrfToken = await getCsrfToken()
+    return api.post('/auth/refresh', null, { headers: { 'X-CSRF-Token': csrfToken } }).then(r => r.data.data)
+  },
 
-  logout:     () => api.post('/auth/logout').catch(() => {}),
+  logout:     async () => {
+    const csrfToken = await getCsrfToken()
+    return api.post('/auth/logout', null, { headers: { 'X-CSRF-Token': csrfToken } }).catch(() => {})
+  },
 
-  logoutAll:  () => api.post('/auth/logout-all').catch(() => {}),
+  logoutAll:  async () => {
+    const csrfToken = await getCsrfToken()
+    return api.post('/auth/logout-all', null, { headers: { 'X-CSRF-Token': csrfToken } }).catch(() => {})
+  },
 
   me:         () =>
     api.get<ApiResponse<{ user: AuthUser }>>('/auth/me').then(r => r.data.data.user),

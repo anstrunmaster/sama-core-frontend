@@ -20,8 +20,6 @@ export interface AuthUser {
 }
 
 export interface AuthTokens {
-  accessToken:  string
-  refreshToken: string
   expiresIn?:   string
   user:         AuthUser
 }
