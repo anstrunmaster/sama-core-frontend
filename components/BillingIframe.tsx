@@ -16,15 +16,12 @@ export default function BillingIframe() {
     userRef.current = user;
   }, [user]);
 
-  const sendAuthData = useCallback((token?: string) => {
+  const sendAuthData = useCallback(() => {
     const currentUser = userRef.current;
     if (!iframeRef.current?.contentWindow || !currentUser) return;
-    const accessToken = token || localStorage.getItem('_at');
-    if (!accessToken) return;
     iframeRef.current.contentWindow.postMessage(
       {
         type:  'AUTH_DATA',
-        token: accessToken,
         user: {
           id:         currentUser.userId,
           email:      currentUser.email,
