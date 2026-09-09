@@ -20,9 +20,14 @@ api.interceptors.response.use(
   res => res,
   async (err: AxiosError) => {
     const original = err.config as InternalAxiosRequestConfig & { _r?: boolean }
-    if (err.response?.status !== 401 || original._r || original.url === '/auth/refresh' || original.url === '/auth/logout') {
-      return Promise.reject(err)
-    }
+    if (
+  err.response?.status !== 401 || 
+  original._r || 
+  original.url?.includes('auth/refresh') ||
+  original.url?.includes('auth/logout')
+) {
+  return Promise.reject(err)
+}
 
     original._r = true
 
