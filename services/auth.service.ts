@@ -11,9 +11,17 @@ export const authService = {
      return api.post('/auth/refresh', {}, { headers: { 'X-CSRF-Token': csrfToken } }).then(r => r.data.data)
 },
 
-  logout:     async () => {
-    const csrfToken = await getCsrfToken()
-     return api.post('/auth/refresh', {}, { headers: { 'X-CSRF-Token': csrfToken } }).then(r => r.data.data)
+  logout: async () => {
+  const csrfToken = await getCsrfToken()
+  await fetch('https://api.teusec.com/api/v1/auth/logout', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken,
+    },
+    body: JSON.stringify({}),
+  }).catch(() => {})
 },
 
   logoutAll:  async () => {
