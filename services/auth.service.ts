@@ -8,18 +8,18 @@ export const authService = {
 
   refresh:    async () => {
     const csrfToken = await getCsrfToken()
-    return api.post('/auth/refresh', null, { headers: { 'X-CSRF-Token': csrfToken } }).then(r => r.data.data)
-  },
+     return api.post('/auth/refresh', {}, { headers: { 'X-CSRF-Token': csrfToken } }).then(r => r.data.data)
+},
 
   logout:     async () => {
     const csrfToken = await getCsrfToken()
-    return api.post('/auth/logout', null, { headers: { 'X-CSRF-Token': csrfToken } }).catch(() => {})
-  },
+     return api.post('/auth/refresh', {}, { headers: { 'X-CSRF-Token': csrfToken } }).then(r => r.data.data)
+},
 
   logoutAll:  async () => {
     const csrfToken = await getCsrfToken()
-    return api.post('/auth/logout-all', null, { headers: { 'X-CSRF-Token': csrfToken } }).catch(() => {})
-  },
+     return api.post('/auth/refresh', {}, { headers: { 'X-CSRF-Token': csrfToken } }).then(r => r.data.data)
+},
 
   me:         () =>
     api.get<ApiResponse<{ user: AuthUser }>>('/auth/me').then(r => r.data.data.user),
