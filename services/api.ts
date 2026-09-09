@@ -38,7 +38,7 @@ api.interceptors.response.use(
     refreshing = true
     try {
       const csrfToken = await getCsrfToken()
-      await api.post('/auth/refresh', null, {
+      await api.post('/auth/refresh', {}, {
         headers: { 'X-CSRF-Token': csrfToken },
       })
       queue.forEach(q => q.resolve()); queue = []
