@@ -3,7 +3,8 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useAuthStore } from '@/store/auth.store';
 import { authService } from '@/services/auth.service';
 
-const INVOICES_URL = process.env.NEXT_PUBLIC_INVOICES_URL || 'https://main.d2n0xc418in8nz.amplifyapp.com/';
+const INVOICES_URL = process.env.NEXT_PUBLIC_INVOICES_URL || 'https://facturacion.teusec.com/';
+
 
 export default function BillingIframe() {
   const iframeRef    = useRef<HTMLIFrameElement>(null);
