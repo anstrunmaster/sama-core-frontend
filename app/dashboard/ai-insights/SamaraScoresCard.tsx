@@ -10,7 +10,8 @@ interface Props {
   loading:     boolean
 }
 
-export function SamaraScoresCard({ profile, reasoning, loading }: Props) {
+export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, loading }: Props) {
+    
   if (loading) return <SamaraScoresSkeleton />
 
   return (
