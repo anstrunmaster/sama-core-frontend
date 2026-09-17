@@ -9,7 +9,8 @@ import { SamaraScoresCard } from './SamaraScoresCard'
 
 export function AiInsightsPanel() {
   const { recommendations, anomalies, loading, error, lastUpdated, refresh } = useAiInsights()
-  const { profile, reasoning, loading: cogLoading, refresh: cogRefresh } = useCognitive()
+  const { profile, reasoning, ivaForecast, cashFlow, loading: cogLoading, refresh: cogRefresh } = useCognitive()
+  
 
   const [, setTick] = useState(0)
   useEffect(() => {
