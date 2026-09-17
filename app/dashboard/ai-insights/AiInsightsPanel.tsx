@@ -2,25 +2,25 @@
 import { useState, useEffect } from 'react'
 import { RefreshCw, Sparkles, AlertCircle } from 'lucide-react'
 import { useAiInsights } from './useAiInsights'
+import { useCognitive } from './useCognitive'
 import { RecommendationsCard } from './RecommendationsCard'
 import { AnomaliesCard } from './AnomaliesCard'
+import { SamaraScoresCard } from './SamaraScoresCard'
 
-/**
- * Panel de IA Insights con:
- *  - Polling cada 5 min
- *  - Indicador de "última actualización"
- *  - Refresh manual
- *  - Click en cards → modales con detalle
- */
 export function AiInsightsPanel() {
   const { recommendations, anomalies, loading, error, lastUpdated, refresh } = useAiInsights()
+  const { profile, reasoning, loading: cogLoading, refresh: cogRefresh } = useCognitive()
 
-  // Estado para forzar re-render del "hace X min" cada 30s
   const [, setTick] = useState(0)
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 30000)
     return () => clearInterval(interval)
   }, [])
+
+  const handleRefresh = () => {
+    refresh()
+    cogRefresh()
+  }
 
   return (
     <div className="space-y-3">
@@ -43,12 +43,12 @@ export function AiInsightsPanel() {
           )}
         </div>
         <button
-          onClick={refresh}
-          disabled={loading}
+          onClick={handleRefresh}
+          disabled={loading || cogLoading}
           className="p-1.5 rounded-lg bg-edge-subtle border border-edge text-ink-tertiary hover:text-ink-primary transition-all disabled:opacity-50"
           title="Actualizar predicciones"
         >
-          <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3 h-3 ${(loading || cogLoading) ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
@@ -60,7 +60,16 @@ export function AiInsightsPanel() {
         </div>
       )}
 
-      {/* Cards grid */}
+      {/* Samara Cognitive Scores — ocupa toda la fila */}
+      <div className="grid grid-cols-1">
+        <SamaraScoresCard
+          profile={profile}
+          reasoning={reasoning}
+          loading={cogLoading}
+        />
+      </div>
+
+      {/* Cards grid — pipelines existentes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <RecommendationsCard
           recommendations={recommendations?.recommendations ?? []}
