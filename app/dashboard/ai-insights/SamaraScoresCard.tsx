@@ -3,9 +3,11 @@ import { Brain, TrendingUp, TrendingDown, Minus, AlertTriangle, Eye, CheckCircle
 import type { CompanyProfile, ReasoningResult } from './useCognitive'
 
 interface Props {
-  profile:   CompanyProfile | null
-  reasoning: ReasoningResult | null
-  loading:   boolean
+  profile:     CompanyProfile | null
+  reasoning:   ReasoningResult | null
+  ivaForecast: IvaForecast | null
+  cashFlow:    CashFlowForecast | null
+  loading:     boolean
 }
 
 export function SamaraScoresCard({ profile, reasoning, loading }: Props) {
@@ -104,6 +106,62 @@ export function SamaraScoresCard({ profile, reasoning, loading }: Props) {
             value={fmtTrend(profile.growth_trend)}
             icon={<TrendIcon trend={profile.growth_trend} />}
           />
+        </div>
+      )}
+
+
+            {/* IVA Forecast */}
+      {ivaForecast && ivaForecast.method !== 'insufficient_data' && (
+        <div className="pt-3 border-t border-edge-subtle">
+          <p className="text-[10px] text-ink-tertiary uppercase tracking-wider mb-2">
+            Proyección IVA — {ivaForecast.period_forecast}
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-edge-subtle rounded-lg p-2 text-center">
+              <p className="text-[10px] text-ink-ghost">IVA cobrado</p>
+              <p className="text-sm font-medium text-ink-primary">${fmtNum(ivaForecast.iva_collected_forecast ?? 0)}</p>
+            </div>
+            <div className="bg-edge-subtle rounded-lg p-2 text-center">
+              <p className="text-[10px] text-ink-ghost">IVA pagado</p>
+              <p className="text-sm font-medium text-ink-primary">${fmtNum(ivaForecast.iva_paid_forecast ?? 0)}</p>
+            </div>
+            <div className={`rounded-lg p-2 text-center ${(ivaForecast.iva_balance_forecast ?? 0) >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+              <p className="text-[10px] text-ink-ghost">Balance</p>
+              <p className={`text-sm font-medium ${(ivaForecast.iva_balance_forecast ?? 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                ${fmtNum(ivaForecast.iva_balance_forecast ?? 0)}
+              </p>
+            </div>
+          </div>
+          {ivaForecast.alert_message && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-2">{ivaForecast.alert_message}</p>
+          )}
+        </div>
+      )}
+
+      {/* Cash Flow Forecast */}
+      {cashFlow && cashFlow.forecast_30d && (
+        <div className="pt-3 border-t border-edge-subtle">
+          <p className="text-[10px] text-ink-tertiary uppercase tracking-wider mb-2">
+            Flujo de caja proyectado
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              { label: '30 días', data: cashFlow.forecast_30d },
+              { label: '60 días', data: cashFlow.forecast_60d },
+              { label: '90 días', data: cashFlow.forecast_90d },
+            ] as const).map(({ label, data }) => data && (
+              <div key={label} className={`rounded-lg p-2 text-center ${data.net >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                <p className="text-[10px] text-ink-ghost">{label}</p>
+                <p className={`text-sm font-medium ${data.net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  ${fmtNum(data.net)}
+                </p>
+                <p className="text-[9px] text-ink-ghost">{(data.confidence * 100).toFixed(0)}% conf.</p>
+              </div>
+            ))}
+          </div>
+          {cashFlow.alert_message && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-2">{cashFlow.alert_message}</p>
+          )}
         </div>
       )}
 
