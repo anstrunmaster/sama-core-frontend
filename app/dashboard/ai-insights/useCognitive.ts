@@ -31,13 +31,20 @@ export interface ReasoningSignal {
 }
 
 export interface ReasoningResult {
-  verdict:                 string   // ALERT | WATCH | OK | INFO
+  verdict:                 string
   confidence:              number
   primary_reason:          string
   suggested_actions:       string[]
   goals_aligned:           string[]
   samara_confidence_score: number
   signals:                 ReasoningSignal[]
+  // NLG
+  nlg_title:               string
+  nlg_message:             string
+  nlg_detail:              string
+  nlg_action_hint:         string
+  nlg_severity_label:      string
+  nlg_template_id:         string
 }
 
 export interface CognitiveState {

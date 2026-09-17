@@ -27,13 +27,18 @@ export function SamaraScoresCard({ profile, reasoning, loading }: Props) {
         )}
       </div>
 
-      {/* Veredicto principal */}
+    {/* Veredicto principal */}
       {reasoning && (
         <div className={`px-4 py-3 rounded-lg border text-sm ${verdictBg(reasoning.verdict)}`}>
           <div className="flex items-start gap-2">
             <VerdictIcon verdict={reasoning.verdict} />
             <div className="flex-1">
-              <p className="font-medium">{reasoning.primary_reason}</p>
+              <p className="font-medium">
+                {reasoning.nlg_title || reasoning.primary_reason}
+              </p>
+              {reasoning.nlg_message && reasoning.nlg_message !== reasoning.primary_reason && (
+                <p className="text-[12px] mt-1 opacity-80">{reasoning.nlg_message}</p>
+              )}
               {reasoning.suggested_actions.length > 0 && (
                 <ul className="mt-2 space-y-1">
                   {reasoning.suggested_actions.slice(0, 3).map((action, i) => (
@@ -43,6 +48,11 @@ export function SamaraScoresCard({ profile, reasoning, loading }: Props) {
                     </li>
                   ))}
                 </ul>
+              )}
+              {reasoning.nlg_action_hint && (
+                <p className="text-[11px] mt-2 font-medium opacity-90">
+                  → {reasoning.nlg_action_hint}
+                </p>
               )}
             </div>
           </div>
