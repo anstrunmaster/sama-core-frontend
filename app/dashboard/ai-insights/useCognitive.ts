@@ -45,6 +45,8 @@ export interface ReasoningResult {
   nlg_action_hint:         string
   nlg_severity_label:      string
   nlg_template_id:         string
+  context_used:            Record<string, number>  // ← agregar esto
+  data_facts:              Record<string, number>  // ← y esto
 }
 
 export interface CognitiveState {

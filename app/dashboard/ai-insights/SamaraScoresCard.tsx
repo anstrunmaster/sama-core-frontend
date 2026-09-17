@@ -166,6 +166,29 @@ export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, lo
         </div>
       )}
 
+      {/* Alertas operacionales */}
+      {reasoning && (reasoning.context_used.customers_critical > 0 || reasoning.context_used.suppliers_critical > 0) && (
+        <div className="pt-3 border-t border-edge-subtle space-y-2">
+          <p className="text-[10px] text-ink-tertiary uppercase tracking-wider">Alertas operacionales</p>
+          {reasoning.context_used.customers_critical > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+              <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
+              <span className="text-[12px] text-red-700 dark:text-red-300">
+                {reasoning.context_used.customers_critical} cliente{reasoning.context_used.customers_critical > 1 ? 's' : ''} en riesgo crítico de pérdida
+              </span>
+            </div>
+          )}
+          {reasoning.context_used.suppliers_critical > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <Eye className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+              <span className="text-[12px] text-amber-700 dark:text-amber-300">
+                {reasoning.context_used.suppliers_critical} proveedor{reasoning.context_used.suppliers_critical > 1 ? 'es' : ''} con comportamiento crítico
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Señales del reasoning */}
       {reasoning && reasoning.signals.length > 0 && (
         <details className="group">
