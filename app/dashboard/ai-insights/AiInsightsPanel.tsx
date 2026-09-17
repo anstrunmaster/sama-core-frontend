@@ -65,6 +65,8 @@ export function AiInsightsPanel() {
         <SamaraScoresCard
           profile={profile}
           reasoning={reasoning}
+          ivaForecast={ivaForecast}
+          cashFlow={cashFlow}
           loading={cogLoading}
         />
       </div>

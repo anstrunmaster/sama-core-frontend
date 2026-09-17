@@ -54,36 +54,80 @@ export interface CognitiveState {
   error:     string | null
   refresh:   () => void
 }
+export interface IvaForecast {
+  period_forecast:        string | null
+  iva_collected_forecast: number | null
+  iva_paid_forecast:      number | null
+  iva_balance_forecast:   number | null
+  confidence:             number
+  method:                 string
+  periods_used:           number
+  alert:                  string | null
+  alert_message:          string | null
+}
 
+export interface CashFlowHorizon {
+  revenue:    number
+  expenses:   number
+  payroll:    number
+  net:        number
+  confidence: number
+}
+
+export interface CashFlowForecast {
+  forecast_30d:    CashFlowHorizon | null
+  forecast_60d:    CashFlowHorizon | null
+  forecast_90d:    CashFlowHorizon | null
+  method:          string
+  periods_used:    number
+  alert:           string | null
+  alert_message:   string | null
+}
+
+export interface CognitiveState {
+  profile:       CompanyProfile | null
+  reasoning:     ReasoningResult | null
+  ivaForecast:   IvaForecast | null
+  cashFlow:      CashFlowForecast | null
+  loading:       boolean
+  error:         string | null
+  refresh:       () => void
+}
 export function useCognitive(): CognitiveState {
   const [profile,   setProfile]   = useState<CompanyProfile | null>(null)
   const [reasoning, setReasoning] = useState<ReasoningResult | null>(null)
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState<string | null>(null)
+  const [ivaForecast, setIvaForecast] = useState<IvaForecast | null>(null)
+  const [cashFlow,    setCashFlow]    = useState<CashFlowForecast | null>(null)
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const [profileRes, reasoningRes] = await Promise.allSettled([
-        fetch(`${AI_URL}/api/v1/cognitive/company-profile`, {
-          credentials: 'include',
-        }),
-        fetch(`${AI_URL}/api/v1/cognitive/reasoning`, {
-          credentials: 'include',
-        }),
+      const [profileRes, reasoningRes, ivaRes, cashRes] = await Promise.allSettled([
+        fetch(`${AI_URL}/api/v1/cognitive/company-profile`, { credentials: 'include' }),
+        fetch(`${AI_URL}/api/v1/cognitive/reasoning`,       { credentials: 'include' }),
+        fetch(`${AI_URL}/api/v1/cognitive/iva-forecast`,    { credentials: 'include' }),
+        fetch(`${AI_URL}/api/v1/cognitive/cash-flow-forecast`, { credentials: 'include' }),
       ])
 
       if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
         const json = await profileRes.value.json()
         setProfile(json.data)
       }
-
       if (reasoningRes.status === 'fulfilled' && reasoningRes.value.ok) {
         const json = await reasoningRes.value.json()
         setReasoning(json.data)
       }
-
+      if (ivaRes.status === 'fulfilled' && ivaRes.value.ok) {
+        const json = await ivaRes.value.json()
+        setIvaForecast(json.data)
+      }
+      if (cashRes.status === 'fulfilled' && cashRes.value.ok) {
+        const json = await cashRes.value.json()
+        setCashFlow(json.data)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error de conexión')
     } finally {
@@ -98,5 +142,5 @@ export function useCognitive(): CognitiveState {
     return () => clearInterval(interval)
   }, [fetchAll])
 
-  return { profile, reasoning, loading, error, refresh: fetchAll }
+  return { profile, reasoning, ivaForecast, cashFlow, loading, error, refresh: fetchAll }
 }
