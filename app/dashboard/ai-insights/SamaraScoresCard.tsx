@@ -1,6 +1,6 @@
 'use client'
 import { Brain, TrendingUp, TrendingDown, Minus, AlertTriangle, Eye, CheckCircle, Info } from 'lucide-react'
-import type { CompanyProfile, ReasoningResult } from './useCognitive'
+import type { CompanyProfile, ReasoningResult, IvaForecast, CashFlowForecast } from './useCognitive'
 
 interface Props {
   profile:     CompanyProfile | null
