@@ -50,11 +50,14 @@ export interface ReasoningResult {
 }
 
 export interface CognitiveState {
-  profile:   CompanyProfile | null
-  reasoning: ReasoningResult | null
-  loading:   boolean
-  error:     string | null
-  refresh:   () => void
+  profile:     CompanyProfile | null
+  reasoning:   ReasoningResult | null
+  ivaForecast: IvaForecast | null
+  cashFlow:    CashFlowForecast | null
+  atRisk:      AtRiskData | null       // ← nuevo
+  loading:     boolean
+  error:       string | null
+  refresh:     () => void
 }
 export interface IvaForecast {
   period_forecast:        string | null
@@ -95,6 +98,38 @@ export interface CognitiveState {
   error:         string | null
   refresh:       () => void
 }
+export interface CustomerAtRisk {
+  customer_id:        string
+  customer_name:      string
+  churn_risk:         number
+  health_score:       number
+  behavior:           string
+  avg_invoice:        number
+  total_invoices:     number
+  last_invoice:       string | null
+  avg_frequency_days: number | null
+  risk_level:         string
+  alert_message:      string
+}
+
+export interface SupplierAtRisk {
+  supplier_id:             string
+  supplier_name:           string
+  trust_score:             number
+  avg_ticket:              number
+  ticket_variability_pct:  number
+  avg_frequency_days:      number | null
+  total_purchases:         number
+  last_purchase:           string | null
+  behavior:                string
+  risk_level:              string
+  alert_message:           string
+}
+
+export interface AtRiskData {
+  customers: CustomerAtRisk[]
+  suppliers: SupplierAtRisk[]
+}
 export function useCognitive(): CognitiveState {
   const [profile,   setProfile]   = useState<CompanyProfile | null>(null)
   const [reasoning, setReasoning] = useState<ReasoningResult | null>(null)
@@ -102,16 +137,19 @@ export function useCognitive(): CognitiveState {
   const [error,     setError]     = useState<string | null>(null)
   const [ivaForecast, setIvaForecast] = useState<IvaForecast | null>(null)
   const [cashFlow,    setCashFlow]    = useState<CashFlowForecast | null>(null)
+  const [atRisk, setAtRisk] = useState<AtRiskData | null>(null)
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const [profileRes, reasoningRes, ivaRes, cashRes] = await Promise.allSettled([
+      const [profileRes, reasoningRes, ivaRes, cashRes, customersRes, suppliersRes] = await Promise.allSettled([
         fetch(`${AI_URL}/api/v1/cognitive/company-profile`, { credentials: 'include' }),
         fetch(`${AI_URL}/api/v1/cognitive/reasoning`,       { credentials: 'include' }),
         fetch(`${AI_URL}/api/v1/cognitive/iva-forecast`,    { credentials: 'include' }),
         fetch(`${AI_URL}/api/v1/cognitive/cash-flow-forecast`, { credentials: 'include' }),
+        fetch(`${AI_URL}/api/v1/cognitive/customers-at-risk`,    { credentials: 'include' }),
+        fetch(`${AI_URL}/api/v1/cognitive/suppliers-at-risk`,    { credentials: 'include' }),
       ])
 
       if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
@@ -130,6 +168,16 @@ export function useCognitive(): CognitiveState {
         const json = await cashRes.value.json()
         setCashFlow(json.data)
       }
+      const atRiskData: AtRiskData = { customers: [], suppliers: [] }
+    if (customersRes.status === 'fulfilled' && customersRes.value.ok) {
+    const json = await customersRes.value.json()
+    atRiskData.customers = json.data.customers || []
+    }
+    if (suppliersRes.status === 'fulfilled' && suppliersRes.value.ok) {
+    const json = await suppliersRes.value.json()
+    atRiskData.suppliers = json.data.suppliers || []
+    }
+    setAtRisk(atRiskData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error de conexión')
     } finally {
@@ -144,5 +192,5 @@ export function useCognitive(): CognitiveState {
     return () => clearInterval(interval)
   }, [fetchAll])
 
-  return { profile, reasoning, ivaForecast, cashFlow, loading, error, refresh: fetchAll }
+  return { profile, reasoning, ivaForecast, cashFlow, atRisk, loading, error, refresh: fetchAll }
 }

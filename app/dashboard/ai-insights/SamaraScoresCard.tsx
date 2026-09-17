@@ -1,16 +1,17 @@
 'use client'
 import { Brain, TrendingUp, TrendingDown, Minus, AlertTriangle, Eye, CheckCircle, Info } from 'lucide-react'
-import type { CompanyProfile, ReasoningResult, IvaForecast, CashFlowForecast } from './useCognitive'
+import type { CompanyProfile, ReasoningResult, IvaForecast, CashFlowForecast, AtRiskData } from './useCognitive'
 
 interface Props {
   profile:     CompanyProfile | null
   reasoning:   ReasoningResult | null
   ivaForecast: IvaForecast | null
   cashFlow:    CashFlowForecast | null
+  atRisk:      AtRiskData | null  
   loading:     boolean
 }
 
-export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, loading }: Props) {
+export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, atRisk, loading }: Props) {
     
   if (loading) return <SamaraScoresSkeleton />
 
@@ -166,26 +167,38 @@ export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, lo
         </div>
       )}
 
-      {/* Alertas operacionales */}
-      {reasoning && (reasoning.context_used.customers_critical > 0 || reasoning.context_used.suppliers_critical > 0) && (
+    {/* Alertas operacionales con detalle */}
+      {atRisk && (atRisk.customers.length > 0 || atRisk.suppliers.length > 0) && (
         <div className="pt-3 border-t border-edge-subtle space-y-2">
           <p className="text-[10px] text-ink-tertiary uppercase tracking-wider">Alertas operacionales</p>
-          {reasoning.context_used.customers_critical > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
-              <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
-              <span className="text-[12px] text-red-700 dark:text-red-300">
-                {reasoning.context_used.customers_critical} cliente{reasoning.context_used.customers_critical > 1 ? 's' : ''} en riesgo crítico de pérdida
-              </span>
+
+          {atRisk.customers.map((c) => (
+            <div key={c.customer_id} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+              <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-[12px] font-medium text-red-700 dark:text-red-300">{c.customer_name}</p>
+                <p className="text-[11px] text-red-600/80 dark:text-red-400/80">{c.alert_message}</p>
+                <div className="flex gap-3 mt-1">
+                  <span className="text-[10px] text-ink-ghost">Churn risk: {c.churn_risk}%</span>
+                  {c.last_invoice && <span className="text-[10px] text-ink-ghost">Última compra: {c.last_invoice}</span>}
+                </div>
+              </div>
             </div>
-          )}
-          {reasoning.context_used.suppliers_critical > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <Eye className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-              <span className="text-[12px] text-amber-700 dark:text-amber-300">
-                {reasoning.context_used.suppliers_critical} proveedor{reasoning.context_used.suppliers_critical > 1 ? 'es' : ''} con comportamiento crítico
-              </span>
+          ))}
+
+          {atRisk.suppliers.map((s) => (
+            <div key={s.supplier_id} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <Eye className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-[12px] font-medium text-amber-700 dark:text-amber-300">{s.supplier_name}</p>
+                <p className="text-[11px] text-amber-600/80 dark:text-amber-400/80">{s.alert_message}</p>
+                <div className="flex gap-3 mt-1">
+                  <span className="text-[10px] text-ink-ghost">Trust Score: {s.trust_score}/100</span>
+                  <span className="text-[10px] text-ink-ghost">Variabilidad: {s.ticket_variability_pct}%</span>
+                </div>
+              </div>
             </div>
-          )}
+          ))}
         </div>
       )}
 

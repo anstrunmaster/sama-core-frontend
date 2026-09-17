@@ -9,8 +9,7 @@ import { SamaraScoresCard } from './SamaraScoresCard'
 
 export function AiInsightsPanel() {
   const { recommendations, anomalies, loading, error, lastUpdated, refresh } = useAiInsights()
-  const { profile, reasoning, ivaForecast, cashFlow, loading: cogLoading, refresh: cogRefresh } = useCognitive()
-  
+  const { profile, reasoning, ivaForecast, cashFlow, atRisk, loading: cogLoading, refresh: cogRefresh } = useCognitive()
 
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -68,10 +67,10 @@ export function AiInsightsPanel() {
           reasoning={reasoning}
           ivaForecast={ivaForecast}
           cashFlow={cashFlow}
+          atRisk={atRisk}
           loading={cogLoading}
         />
-      </div>
-
+        </div>
       {/* Cards grid — pipelines existentes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <RecommendationsCard
