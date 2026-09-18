@@ -69,6 +69,7 @@ export function AiInsightsPanel() {
           cashFlow={cashFlow}
           atRisk={atRisk}
           loading={cogLoading}
+          onFeedback={submitFeedback}
         />
         </div>
       {/* Cards grid — pipelines existentes */}
