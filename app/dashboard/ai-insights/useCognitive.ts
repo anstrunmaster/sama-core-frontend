@@ -58,6 +58,7 @@ export interface CognitiveState {
   loading:     boolean
   error:       string | null
   refresh:     () => void
+  submitFeedback: (action: 'CONFIRMED' | 'DISMISSED' | 'CORRECTED', comment?: string) => Promise<boolean>
 }
 export interface IvaForecast {
   period_forecast:        string | null
@@ -192,5 +193,25 @@ export function useCognitive(): CognitiveState {
     return () => clearInterval(interval)
   }, [fetchAll])
 
-  return { profile, reasoning, ivaForecast, cashFlow, atRisk, loading, error, refresh: fetchAll }
+
+
+
+  const submitFeedback = useCallback(async (
+    action: 'CONFIRMED' | 'DISMISSED' | 'CORRECTED',
+    userComment?: string,
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch(`${AI_URL}/api/v1/cognitive/feedback`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, user_comment: userComment }),
+      })
+      return res.ok
+    } catch {
+      return false
+    }
+  }, [])
+
+  return { profile, reasoning, ivaForecast, cashFlow, atRisk, loading, error, refresh: fetchAll, submitFeedback }
 }

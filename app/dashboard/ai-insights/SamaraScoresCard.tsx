@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { Brain, TrendingUp, TrendingDown, Minus, AlertTriangle, Eye, CheckCircle, Info } from 'lucide-react'
 import type { CompanyProfile, ReasoningResult, IvaForecast, CashFlowForecast, AtRiskData } from './useCognitive'
 
@@ -7,12 +8,22 @@ interface Props {
   reasoning:   ReasoningResult | null
   ivaForecast: IvaForecast | null
   cashFlow:    CashFlowForecast | null
-  atRisk:      AtRiskData | null  
+  atRisk:      AtRiskData | null
   loading:     boolean
+  onFeedback:  (action: 'CONFIRMED' | 'DISMISSED' | 'CORRECTED', comment?: string) => Promise<boolean>
 }
 
-export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, atRisk, loading }: Props) {
-    
+export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, atRisk, loading, onFeedback }: Props) {
+  const [feedbackSent, setFeedbackSent] = useState<string | null>(null)
+  const [feedbackLoading, setFeedbackLoading] = useState(false)
+
+  const handleFeedback = async (action: 'CONFIRMED' | 'DISMISSED' | 'CORRECTED') => {
+    setFeedbackLoading(true)
+    const ok = await onFeedback(action)
+    if (ok) setFeedbackSent(action)
+    setFeedbackLoading(false)
+  }
+
   if (loading) return <SamaraScoresSkeleton />
 
   return (
@@ -31,7 +42,7 @@ export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, at
         )}
       </div>
 
-    {/* Veredicto principal */}
+      {/* Veredicto principal */}
       {reasoning && (
         <div className={`px-4 py-3 rounded-lg border text-sm ${verdictBg(reasoning.verdict)}`}>
           <div className="flex items-start gap-2">
@@ -60,6 +71,45 @@ export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, at
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Feedback buttons */}
+      {reasoning && !feedbackSent && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] text-ink-tertiary">¿Esta alerta fue útil?</span>
+          <button
+            onClick={() => handleFeedback('CONFIRMED')}
+            disabled={feedbackLoading}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 hover:bg-green-500/20 transition-all disabled:opacity-50"
+          >
+            ✓ Correcto
+          </button>
+          <button
+            onClick={() => handleFeedback('DISMISSED')}
+            disabled={feedbackLoading}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all disabled:opacity-50"
+          >
+            ✗ No aplica
+          </button>
+          <button
+            onClick={() => handleFeedback('CORRECTED')}
+            disabled={feedbackLoading}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all disabled:opacity-50"
+          >
+            ~ Corregir
+          </button>
+        </div>
+      )}
+
+      {/* Feedback confirmación */}
+      {feedbackSent && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-edge-subtle border border-edge">
+          <span className="text-[11px] text-ink-secondary">
+            {feedbackSent === 'CONFIRMED' && '✓ Gracias — Samara tomará nota de que esta alerta fue útil.'}
+            {feedbackSent === 'DISMISSED' && '✗ Entendido — Samara reducirá el peso de este tipo de alerta.'}
+            {feedbackSent === 'CORRECTED' && '~ Anotado — Samara ajustará sus parámetros con tu corrección.'}
+          </span>
         </div>
       )}
 
@@ -111,8 +161,7 @@ export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, at
         </div>
       )}
 
-
-            {/* IVA Forecast */}
+      {/* IVA Forecast */}
       {ivaForecast && ivaForecast.method !== 'insufficient_data' && (
         <div className="pt-3 border-t border-edge-subtle">
           <p className="text-[10px] text-ink-tertiary uppercase tracking-wider mb-2">
@@ -167,11 +216,10 @@ export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, at
         </div>
       )}
 
-    {/* Alertas operacionales con detalle */}
+      {/* Alertas operacionales con detalle */}
       {atRisk && (atRisk.customers.length > 0 || atRisk.suppliers.length > 0) && (
         <div className="pt-3 border-t border-edge-subtle space-y-2">
           <p className="text-[10px] text-ink-tertiary uppercase tracking-wider">Alertas operacionales</p>
-
           {atRisk.customers.map((c) => (
             <div key={c.customer_id} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
               <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -185,7 +233,6 @@ export function SamaraScoresCard({ profile, reasoning, ivaForecast, cashFlow, at
               </div>
             </div>
           ))}
-
           {atRisk.suppliers.map((s) => (
             <div key={s.supplier_id} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <Eye className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
