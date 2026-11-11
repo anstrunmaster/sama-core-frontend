@@ -3,7 +3,8 @@ import { useState, useRef, useCallback } from 'react'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import {
   Camera, Upload, CheckCircle2, XCircle, ShieldCheck,
-  ShieldX, RefreshCw, User, Fingerprint, AlertTriangle
+  ShieldX, RefreshCw, User, Fingerprint, AlertTriangle,
+  Sun, Eye, MonitorSmartphone, Info, X
 } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
@@ -18,22 +19,20 @@ function getToken(): string {
 
 type Tab = 'registrar' | 'verificar'
 
-// ── Registrar foto de referencia ──────────────────────────────────────────────
+// ── REGISTRAR ─────────────────────────────────────────────────────────────────
 
 function RegistrarTab() {
-  const [cedula, setCedula]   = useState('')
-  const [preview, setPreview] = useState<string | null>(null)
-  const [file, setFile]       = useState<File | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [result, setResult]   = useState<{ ok: boolean; msg: string } | null>(null)
+  const [step, setStep]           = useState<'chat' | 'form'>('chat')
+  const [cedula, setCedula]       = useState('')
+  const [preview, setPreview]     = useState<string | null>(null)
+  const [file, setFile]           = useState<File | null>(null)
+  const [loading, setLoading]     = useState(false)
+  const [result, setResult]       = useState<{ ok: boolean; msg: string } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   function onFile(f: File) {
-    setFile(f)
-    setPreview(URL.createObjectURL(f))
-    setResult(null)
+    setFile(f); setPreview(URL.createObjectURL(f)); setResult(null)
   }
-
   function onDrop(e: React.DragEvent) {
     e.preventDefault()
     const f = e.dataTransfer.files[0]
@@ -42,8 +41,7 @@ function RegistrarTab() {
 
   async function handleSubmit() {
     if (!cedula || !file) return
-    setLoading(true)
-    setResult(null)
+    setLoading(true); setResult(null)
     try {
       const form = new FormData()
       form.append('photo', file)
@@ -53,16 +51,47 @@ function RegistrarTab() {
         body: form,
       })
       const json = await res.json()
-      if (res.ok) {
-        setResult({ ok: true, msg: `Foto registrada para cédula ${cedula}` })
-      } else {
-        setResult({ ok: false, msg: json.message?.[0] ?? 'Error al registrar' })
-      }
+      setResult(res.ok
+        ? { ok: true,  msg: `Foto de referencia registrada para cédula ${cedula}` }
+        : { ok: false, msg: json.message?.[0] ?? 'Error al registrar' })
     } catch {
       setResult({ ok: false, msg: 'Error de conexión' })
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
+  }
+
+  if (step === 'chat') {
+    return (
+      <div className="max-w-lg mx-auto space-y-4 py-2">
+        {/* Bubble bienvenida */}
+        <div className="flex justify-center">
+          <div className="w-14 h-14 rounded-full bg-blue/10 flex items-center justify-center mb-1">
+            <Fingerprint className="w-7 h-7 text-blue" />
+          </div>
+        </div>
+
+        <ChatBubble>
+          <p className="font-semibold text-ink-primary">Sistema Biométrico</p>
+          <p className="text-ink-secondary mt-0.5">Registra la foto de referencia de un usuario para habilitar la verificación facial.</p>
+        </ChatBubble>
+
+        <ChatBubble>
+          <p className="font-medium text-ink-primary">📋 Ten a la mano la cédula del usuario y una foto clara de su rostro.</p>
+        </ChatBubble>
+
+        <ChatBubble>
+          <p className="font-medium text-ink-primary">📸 La foto debe mostrar el rostro bien iluminado y sin accesorios.</p>
+        </ChatBubble>
+
+        <div className="flex justify-center pt-2">
+          <button
+            onClick={() => setStep('form')}
+            className="px-8 py-3 rounded-full bg-blue text-white font-semibold text-sm hover:bg-blue/90 transition-colors shadow-sm"
+          >
+            Empecemos
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -100,19 +129,14 @@ function RegistrarTab() {
             </div>
           </div>
         )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f) }}
-        />
+        <input ref={inputRef} type="file" accept="image/*" className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f) }} />
       </div>
 
       <button
         onClick={handleSubmit}
         disabled={!cedula || !file || loading}
-        className="w-full py-3 rounded-xl bg-blue text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue/90 transition-colors"
+        className="w-full py-3 rounded-full bg-blue text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue/90 transition-colors"
       >
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <User className="w-4 h-4" />}
         {loading ? 'Registrando…' : 'Registrar foto de referencia'}
@@ -124,9 +148,7 @@ function RegistrarTab() {
             ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
             : 'bg-red-500/10 border-red-500/20 text-red-500'
         }`}>
-          {result.ok
-            ? <CheckCircle2 className="w-4 h-4 shrink-0" />
-            : <XCircle className="w-4 h-4 shrink-0" />}
+          {result.ok ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <XCircle className="w-4 h-4 shrink-0" />}
           {result.msg}
         </div>
       )}
@@ -134,9 +156,9 @@ function RegistrarTab() {
   )
 }
 
-// ── Verificar identidad ───────────────────────────────────────────────────────
+// ── VERIFICAR ─────────────────────────────────────────────────────────────────
 
-type VerifyState = 'idle' | 'camera' | 'captured' | 'loading' | 'done'
+type VerifyState = 'chat' | 'cedula' | 'modal-instructions' | 'camera' | 'captured' | 'loading' | 'done' | 'error' | 'last-attempt'
 
 interface VerifyResult {
   approved: boolean
@@ -146,18 +168,17 @@ interface VerifyResult {
 }
 
 function VerificarTab() {
+  const [state, setState]             = useState<VerifyState>('chat')
   const [cedula, setCedula]           = useState('')
-  const [state, setState]             = useState<VerifyState>('idle')
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null)
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
   const [result, setResult]           = useState<VerifyResult | null>(null)
-  const [error, setError]             = useState<string | null>(null)
+  const [attemptsLeft, setAttemptsLeft] = useState(3)
   const videoRef  = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
   const startCamera = useCallback(async () => {
-    setError(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
@@ -170,7 +191,7 @@ function VerificarTab() {
         videoRef.current.play()
       }
     } catch {
-      setError('No se pudo acceder a la cámara. Permite el permiso en tu navegador.')
+      setState('cedula')
     }
   }, [])
 
@@ -185,8 +206,7 @@ function VerificarTab() {
     const c = canvasRef.current
     const width  = v.videoWidth  || 640
     const height = v.videoHeight || 480
-    c.width  = width
-    c.height = height
+    c.width = width; c.height = height
     c.getContext('2d')!.drawImage(v, 0, 0, width, height)
     stopCamera()
     c.toBlob(blob => {
@@ -197,18 +217,9 @@ function VerificarTab() {
     }, 'image/jpeg', 0.92)
   }
 
-  function retake() {
-    setCapturedUrl(null)
-    setCapturedBlob(null)
-    setResult(null)
-    setError(null)
-    setState('idle')
-  }
-
   async function verify() {
     if (!cedula || !capturedBlob) return
     setState('loading')
-    setError(null)
     try {
       const form = new FormData()
       form.append('photo', capturedBlob, 'captured.jpg')
@@ -223,148 +234,370 @@ function VerificarTab() {
         setResult(json.data)
         setState('done')
       } else {
-        const msg = Array.isArray(json.message) ? json.message[0] : json.message
-        setError(msg ?? 'Error en la verificación')
-        setState('captured')
+        const left = json.data?.attemptsLeft ?? (attemptsLeft - 1)
+        setAttemptsLeft(left)
+        setState(left <= 1 ? 'last-attempt' : 'error')
       }
     } catch {
-      setError('Error de conexión')
-      setState('captured')
+      setState('error')
     }
   }
 
-  return (
-    <div className="max-w-lg mx-auto space-y-5">
-      <div>
-        <label className="block text-xs font-semibold text-ink-tertiary uppercase tracking-widest mb-1.5">
-          Número de cédula
-        </label>
-        <input
-          type="text"
-          value={cedula}
-          onChange={e => setCedula(e.target.value.replace(/\D/g, '').slice(0, 13))}
-          placeholder="0912345678"
-          disabled={state === 'camera' || state === 'loading'}
-          className="w-full px-4 py-2.5 rounded-xl bg-surface-raised border border-edge text-ink-primary text-sm placeholder:text-ink-ghost focus:outline-none focus:border-blue transition-colors disabled:opacity-50"
-        />
+  function retake() {
+    setCapturedUrl(null); setCapturedBlob(null); setResult(null)
+    setState('modal-instructions')
+  }
+
+  function reset() {
+    setCedula(''); setCapturedUrl(null); setCapturedBlob(null)
+    setResult(null); setAttemptsLeft(3); setState('chat')
+  }
+
+  // ── CHAT inicial ──
+  if (state === 'chat') {
+    return (
+      <div className="max-w-lg mx-auto space-y-4 py-2">
+        <div className="flex justify-center">
+          <div className="w-14 h-14 rounded-full bg-blue/10 flex items-center justify-center">
+            <Fingerprint className="w-7 h-7 text-blue" />
+          </div>
+        </div>
+
+        <ChatBubble>
+          <p className="font-semibold text-ink-primary">Verificación biométrica</p>
+          <p className="text-ink-secondary mt-0.5">Te damos la bienvenida al sistema de identidad digital.</p>
+        </ChatBubble>
+
+        <ChatBubble>
+          <div className="space-y-2 text-ink-secondary text-sm">
+            <div className="flex items-start gap-2">
+              <span className="text-base">🪪</span>
+              <span>Ten tu cédula a la mano para llenar tus datos.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-base">📷</span>
+              <span>Acepta los permisos para usar tu cámara, así validaremos tu identidad.</span>
+            </div>
+          </div>
+        </ChatBubble>
+
+        <ChatBubble>
+          <p className="text-ink-secondary text-sm">
+            Empecemos a verificar tu identidad de forma segura y en minutos 😊
+          </p>
+        </ChatBubble>
+
+        <div className="flex justify-center pt-2">
+          <button
+            onClick={() => setState('cedula')}
+            className="px-8 py-3 rounded-full bg-blue text-white font-semibold text-sm hover:bg-blue/90 transition-colors shadow-sm"
+          >
+            Empecemos
+          </button>
+        </div>
       </div>
+    )
+  }
 
-      <div className="relative rounded-2xl overflow-hidden bg-black" style={{ minHeight: 280 }}>
+  // ── CÉDULA ──
+  if (state === 'cedula') {
+    return (
+      <div className="max-w-lg mx-auto space-y-4 py-2">
+        <ChatBubble>
+          <p className="font-medium text-ink-primary">Perfecto ✨ Primero queremos conocerte mejor</p>
+        </ChatBubble>
 
-        {state === 'idle' && (
-          <div className="flex flex-col items-center justify-center h-64 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-blue/10 flex items-center justify-center">
-              <Camera className="w-7 h-7 text-blue" />
+        <div className="bg-surface-raised border border-edge rounded-2xl p-5 space-y-4">
+          <p className="font-semibold text-ink-primary text-sm">
+            Ahora, escribe tu cédula y validaremos tu identidad
+          </p>
+          <div>
+            <label className="block text-xs text-ink-tertiary mb-1.5">Cédula</label>
+            <input
+              type="text"
+              value={cedula}
+              onChange={e => setCedula(e.target.value.replace(/\D/g, '').slice(0, 13))}
+              placeholder="0912345678"
+              className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-surface border border-edge text-ink-primary text-sm placeholder:text-ink-ghost focus:outline-none focus:border-blue transition-colors"
+            />
+          </div>
+          <button
+            onClick={() => setState('modal-instructions')}
+            disabled={cedula.length < 10}
+            className="w-full py-3 rounded-full bg-blue text-white font-semibold text-sm disabled:opacity-40 hover:bg-blue/90 transition-colors"
+          >
+            Continuar
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── MODAL INSTRUCCIONES ──
+  if (state === 'modal-instructions') {
+    return (
+      <div className="max-w-lg mx-auto py-2">
+        <ChatBubble>
+          <p className="text-ink-secondary text-sm">¿Listo para una foto rápida? 📷</p>
+        </ChatBubble>
+
+        <div className="mt-4 bg-surface-raised border border-edge rounded-2xl overflow-hidden">
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="font-semibold text-ink-primary text-sm">
+                Validaremos la identidad de la cédula <span className="text-blue">{cedula}</span>
+              </p>
             </div>
-            <div className="text-center">
-              <p className="text-sm font-medium text-ink-secondary">Listo para escanear</p>
-              <p className="text-xs text-ink-ghost mt-0.5">Ingresa la cédula y abre la cámara</p>
+
+            {/* Ilustración */}
+            <div className="flex justify-center mb-5">
+              <div className="relative w-32 h-32 rounded-full border-2 border-dashed border-edge flex items-center justify-center bg-surface">
+                <div className="w-20 h-20 rounded-full bg-blue/10 flex items-center justify-center">
+                  <User className="w-10 h-10 text-blue/40" />
+                </div>
+              </div>
             </div>
+
+            <p className="font-semibold text-ink-primary text-sm mb-3">Para tomar tu foto:</p>
+            <div className="bg-white dark:bg-surface border border-edge rounded-xl p-4 space-y-3 text-sm text-ink-secondary">
+              <div className="flex items-center gap-3">
+                <Eye className="w-4 h-4 text-ink-tertiary shrink-0" />
+                <span>Mantén los ojos abiertos y evita usar lentes o gafas.</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Sun className="w-4 h-4 text-ink-tertiary shrink-0" />
+                <span>Busca un lugar iluminado y evita ponerte de espaldas a la luz.</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <MonitorSmartphone className="w-4 h-4 text-ink-tertiary shrink-0" />
+                <span>Coloca tu rostro frente a la cámara, bien centrado.</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-5 pb-5">
             <button
               onClick={startCamera}
-              disabled={!cedula}
-              className="px-5 py-2.5 rounded-xl bg-blue text-white text-sm font-semibold flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue/90 transition-colors"
+              className="w-full py-3 rounded-full bg-blue text-white font-semibold text-sm hover:bg-blue/90 transition-colors"
             >
-              <Camera className="w-4 h-4" /> Abrir cámara
+              Continuar
             </button>
           </div>
-        )}
+        </div>
+      </div>
+    )
+  }
 
-        {state === 'camera' && (
-          <>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-72 object-cover"
-            />
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-48 h-56 rounded-full border-2 border-white/40" />
-            </div>
-            <div className="absolute bottom-0 inset-x-0 p-4 flex justify-center bg-gradient-to-t from-black/60">
-              <button
-                onClick={capture}
-                className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
-              >
-                <div className="w-12 h-12 rounded-full bg-blue" />
-              </button>
-            </div>
-          </>
-        )}
-
-        {(state === 'captured' || state === 'loading') && capturedUrl && (
-          <img src={capturedUrl} alt="captured" className="w-full h-72 object-cover" />
-        )}
-
-        {state === 'loading' && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="text-center">
-              <RefreshCw className="w-8 h-8 text-white animate-spin mx-auto mb-2" />
-              <p className="text-white text-sm font-medium">Verificando identidad…</p>
-            </div>
+  // ── CÁMARA ──
+  if (state === 'camera') {
+    return (
+      <div className="max-w-lg mx-auto py-2">
+        <div className="relative rounded-2xl overflow-hidden bg-black" style={{ minHeight: 320 }}>
+          <video ref={videoRef} autoPlay playsInline muted className="w-full h-80 object-cover" />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-52 h-60 rounded-full border-2 border-white/60" />
           </div>
-        )}
-
-        {state === 'done' && result && (
-          <div className={`absolute inset-0 flex flex-col items-center justify-center gap-4 ${
-            result.approved ? 'bg-emerald-900/80' : 'bg-red-900/80'
-          }`}>
-            {result.approved
-              ? <ShieldCheck className="w-16 h-16 text-emerald-400" />
-              : <ShieldX className="w-16 h-16 text-red-400" />}
-            <div className="text-center">
-              <p className={`text-2xl font-bold ${result.approved ? 'text-emerald-300' : 'text-red-300'}`}>
-                {result.approved ? 'IDENTIDAD VERIFICADA' : 'NO VERIFICADO'}
-              </p>
-              <p className="text-white/70 text-sm mt-1">Score de similitud: {result.score}%</p>
-              {!result.approved && result.attemptsLeft > 0 && (
-                <p className="text-white/50 text-xs mt-1">Intentos restantes: {result.attemptsLeft}</p>
-              )}
-              {result.blocked && (
-                <p className="text-red-300 text-xs mt-1 font-semibold">⚠️ Cuenta bloqueada temporalmente</p>
-              )}
-            </div>
+          <div className="absolute bottom-0 inset-x-0 p-5 flex justify-center bg-gradient-to-t from-black/70">
+            <button
+              onClick={capture}
+              className="w-18 h-18 w-[72px] h-[72px] rounded-full bg-white flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
+            >
+              <div className="w-14 h-14 rounded-full bg-blue" />
+            </button>
           </div>
-        )}
-
+        </div>
         <canvas ref={canvasRef} className="hidden" />
       </div>
+    )
+  }
 
-      {error && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-red-500/10 border-red-500/20 text-red-500 text-sm">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          {error}
+  // ── CAPTURADO ──
+  if (state === 'captured') {
+    return (
+      <div className="max-w-lg mx-auto space-y-4 py-2">
+        <div className="relative rounded-2xl overflow-hidden bg-black">
+          {capturedUrl && <img src={capturedUrl} alt="captured" className="w-full h-80 object-cover" />}
         </div>
-      )}
-
-      <div className="flex gap-3">
-        {state === 'captured' && (
-          <>
-            <button
-              onClick={retake}
-              className="flex-1 py-3 rounded-xl border border-edge text-ink-secondary text-sm font-semibold flex items-center justify-center gap-2 hover:border-edge-strong transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" /> Repetir
-            </button>
-            <button
-              onClick={verify}
-              disabled={!cedula}
-              className="flex-1 py-3 rounded-xl bg-blue text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-40 hover:bg-blue/90 transition-colors"
-            >
-              <Fingerprint className="w-4 h-4" /> Verificar
-            </button>
-          </>
-        )}
-        {state === 'done' && (
+        <canvas ref={canvasRef} className="hidden" />
+        <div className="flex gap-3">
           <button
             onClick={retake}
-            className="w-full py-3 rounded-xl border border-edge text-ink-secondary text-sm font-semibold flex items-center justify-center gap-2 hover:border-edge-strong transition-colors"
+            className="flex-1 py-3 rounded-full border border-edge text-ink-secondary text-sm font-semibold flex items-center justify-center gap-2 hover:border-edge-strong transition-colors"
           >
-            <RefreshCw className="w-4 h-4" /> Nueva verificación
+            <RefreshCw className="w-4 h-4" /> Repetir
           </button>
-        )}
+          <button
+            onClick={verify}
+            className="flex-1 py-3 rounded-full bg-blue text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-blue/90 transition-colors"
+          >
+            <Fingerprint className="w-4 h-4" /> Verificar
+          </button>
+        </div>
       </div>
+    )
+  }
+
+  // ── LOADING ──
+  if (state === 'loading') {
+    return (
+      <div className="max-w-lg mx-auto py-2">
+        <div className="relative rounded-2xl overflow-hidden bg-black" style={{ minHeight: 320 }}>
+          {capturedUrl && <img src={capturedUrl} alt="captured" className="w-full h-80 object-cover opacity-60" />}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <RefreshCw className="w-10 h-10 text-white animate-spin mx-auto mb-3" />
+              <p className="text-white font-semibold">Verificando identidad…</p>
+              <p className="text-white/60 text-xs mt-1">Esto puede tomar unos segundos</p>
+            </div>
+          </div>
+        </div>
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
+    )
+  }
+
+  // ── ÉXITO ──
+  if (state === 'done' && result) {
+    return (
+      <div className="max-w-lg mx-auto space-y-4 py-2">
+        <div className={`rounded-2xl p-8 flex flex-col items-center gap-4 text-center ${
+          result.approved ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'
+        }`}>
+          {result.approved
+            ? <ShieldCheck className="w-20 h-20 text-emerald-500" />
+            : <ShieldX className="w-20 h-20 text-red-500" />}
+          <div>
+            <p className={`text-2xl font-bold ${result.approved ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+              {result.approved ? 'IDENTIDAD VERIFICADA' : 'NO VERIFICADO'}
+            </p>
+            <p className="text-ink-tertiary text-sm mt-1">Score de similitud: <span className="font-semibold text-ink-primary">{result.score}%</span></p>
+            {!result.approved && result.attemptsLeft > 0 && (
+              <p className="text-ink-tertiary text-xs mt-1">Intentos restantes: {result.attemptsLeft}</p>
+            )}
+            {result.blocked && (
+              <div className="mt-3 flex items-center justify-center gap-2 text-red-500 text-sm font-semibold">
+                <AlertTriangle className="w-4 h-4" /> Cuenta bloqueada temporalmente
+              </div>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={reset}
+          className="w-full py-3 rounded-full border border-edge text-ink-secondary text-sm font-semibold flex items-center justify-center gap-2 hover:border-edge-strong transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" /> Nueva verificación
+        </button>
+      </div>
+    )
+  }
+
+  // ── ERROR (foto no válida) ──
+  if (state === 'error') {
+    return (
+      <div className="max-w-lg mx-auto py-2">
+        <div className="bg-surface-raised border border-edge rounded-2xl overflow-hidden">
+          <div className="p-5 text-center space-y-4">
+            <p className="text-lg font-bold text-ink-primary">Tu foto no es válida</p>
+
+            {/* Ilustración: cédula + selfie */}
+            <div className="flex items-center justify-center gap-4 py-2">
+              <div className="w-24 h-16 rounded-lg bg-surface border border-edge flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-8 h-8 rounded-full bg-ink-ghost/20 mx-auto mb-1" />
+                  <div className="space-y-0.5">
+                    <div className="h-1 w-10 bg-ink-ghost/20 rounded mx-auto" />
+                    <div className="h-1 w-8 bg-ink-ghost/20 rounded mx-auto" />
+                  </div>
+                </div>
+              </div>
+              <div className="w-16 h-24 rounded-2xl border-2 border-red-400 bg-surface flex items-center justify-center relative">
+                <User className="w-8 h-8 text-ink-ghost/40" />
+                <div className="absolute bottom-1.5 inset-x-0 flex justify-center">
+                  <div className="w-6 h-1.5 rounded-full bg-red-400" />
+                </div>
+              </div>
+            </div>
+
+            <p className="text-ink-secondary text-sm">
+              Para validar tu identidad, asegúrate de que tu foto se parezca a la de tu cédula. Inténtalo de nuevo.
+            </p>
+            <p className="text-ink-tertiary text-xs">Intentos restantes: {attemptsLeft}</p>
+          </div>
+          <div className="px-5 pb-5">
+            <button
+              onClick={retake}
+              className="w-full py-3 rounded-full bg-blue text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-blue/90 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" /> Tomar otra foto
+            </button>
+          </div>
+        </div>
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
+    )
+  }
+
+  // ── ÚLTIMO INTENTO ──
+  if (state === 'last-attempt') {
+    return (
+      <div className="max-w-lg mx-auto py-2">
+        <div className="bg-surface-raised border border-orange-400/30 rounded-2xl overflow-hidden">
+          <div className="p-5 text-center space-y-4">
+            <p className="text-lg font-bold text-ink-primary">Este es tu último intento</p>
+
+            <div className="flex items-center justify-center gap-4 py-2">
+              <div className="w-24 h-16 rounded-lg bg-surface border border-edge flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-8 h-8 rounded-full bg-ink-ghost/20 mx-auto mb-1" />
+                  <div className="space-y-0.5">
+                    <div className="h-1 w-10 bg-ink-ghost/20 rounded mx-auto" />
+                    <div className="h-1 w-8 bg-ink-ghost/20 rounded mx-auto" />
+                  </div>
+                </div>
+              </div>
+              <div className="w-16 h-24 rounded-2xl border-2 border-orange-400 bg-surface flex items-center justify-center relative">
+                <User className="w-8 h-8 text-ink-ghost/40" />
+                <div className="absolute bottom-1.5 inset-x-0 flex justify-center">
+                  <div className="w-6 h-1.5 rounded-full bg-orange-400" />
+                </div>
+              </div>
+            </div>
+
+            <p className="text-ink-secondary text-sm">
+              Para validar tu identidad, asegúrate de que tu foto se parezca a la de tu cédula.
+              Tómala en un lugar bien iluminado, sin accesorios y con el rostro centrado.
+            </p>
+
+            <div className="bg-blue/5 border border-blue/20 rounded-xl p-3 flex items-start gap-2 text-left">
+              <Info className="w-4 h-4 text-blue shrink-0 mt-0.5" />
+              <p className="text-xs text-ink-secondary">
+                Si no podemos verificar tu identidad, vuelve a intentarlo en 24 horas.
+              </p>
+            </div>
+          </div>
+          <div className="px-5 pb-5">
+            <button
+              onClick={retake}
+              className="w-full py-3 rounded-full bg-blue text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-blue/90 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" /> Tomar otra foto
+            </button>
+          </div>
+        </div>
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
+    )
+  }
+
+  return null
+}
+
+// ── ChatBubble helper ─────────────────────────────────────────────────────────
+
+function ChatBubble({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-surface-raised border border-edge rounded-2xl rounded-tl-sm px-4 py-3 text-sm">
+      {children}
     </div>
   )
 }
