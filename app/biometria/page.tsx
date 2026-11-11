@@ -264,6 +264,14 @@ function VerificarTab() {
             <Fingerprint className="w-7 h-7 text-blue" />
           </div>
         </div>
+        <div className="flex justify-center">
+  <img
+    src="/bienvenida.png"
+    alt="Bienvenida biométrica"
+    className="w-52 h-auto"
+    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+  />
+</div>
         <ChatBubble>
           <p className="font-semibold text-ink-primary">Verificación biométrica</p>
           <p className="text-ink-secondary mt-0.5">Te damos la bienvenida al sistema de identidad digital.</p>
@@ -302,7 +310,7 @@ function VerificarTab() {
     return (
       <div className="max-w-lg mx-auto space-y-4 py-2">
         <ChatBubble>
-          <p className="font-medium text-ink-primary">Perfecto ✨ Primero queremos conocerte mejor</p>
+          <p className="font-medium text-ink-primary">Perfecto - Primero queremos saber que eres tú</p>
         </ChatBubble>
         <div className="bg-surface-raised border border-edge rounded-2xl p-5 space-y-4">
           <p className="font-semibold text-ink-primary text-sm">
@@ -589,7 +597,7 @@ export default function BiometriaPage() {
             Verificación biométrica
           </h1>
           <p className="text-sm text-ink-tertiary mt-0.5">
-            Registra y verifica identidades mediante reconocimiento facial
+            Portal de identificación de identidades mediante reconocimiento facial
           </p>
         </div>
 
