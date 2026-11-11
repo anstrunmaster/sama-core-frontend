@@ -164,21 +164,25 @@ function VerificarTab() {
   const streamRef = useRef<MediaStream | null>(null)
 
   const startCamera = useCallback(async () => {
-    setError(null)
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+  setError(null)
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+    })
+    streamRef.current = stream
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream
+      // Esperar que el video tenga datos antes de mostrar el botón
+      await new Promise<void>(resolve => {
+        videoRef.current!.onloadeddata = () => resolve()
+        videoRef.current!.play()
       })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-      }
-      setState('camera')
-    } catch {
-      setError('No se pudo acceder a la cámara. Permite el permiso en tu navegador.')
     }
-  }, [])
+    setState('camera')
+  } catch {
+    setError('No se pudo acceder a la cámara. Permite el permiso en tu navegador.')
+  }
+}, [])
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop())
