@@ -16,18 +16,16 @@ function getToken(): string {
   } catch { return '' }
 }
 
-// ── Tab ───────────────────────────────────────────────────────────────────────
-
 type Tab = 'registrar' | 'verificar'
 
 // ── Registrar foto de referencia ──────────────────────────────────────────────
 
 function RegistrarTab() {
-  const [cedula, setCedula]       = useState('')
-  const [preview, setPreview]     = useState<string | null>(null)
-  const [file, setFile]           = useState<File | null>(null)
-  const [loading, setLoading]     = useState(false)
-  const [result, setResult]       = useState<{ ok: boolean; msg: string } | null>(null)
+  const [cedula, setCedula]   = useState('')
+  const [preview, setPreview] = useState<string | null>(null)
+  const [file, setFile]       = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [result, setResult]   = useState<{ ok: boolean; msg: string } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   function onFile(f: File) {
@@ -69,8 +67,6 @@ function RegistrarTab() {
 
   return (
     <div className="max-w-lg mx-auto space-y-5">
-
-      {/* Cédula */}
       <div>
         <label className="block text-xs font-semibold text-ink-tertiary uppercase tracking-widest mb-1.5">
           Número de cédula
@@ -84,7 +80,6 @@ function RegistrarTab() {
         />
       </div>
 
-      {/* Drop zone */}
       <div
         onDrop={onDrop}
         onDragOver={e => e.preventDefault()}
@@ -114,7 +109,6 @@ function RegistrarTab() {
         />
       </div>
 
-      {/* Botón */}
       <button
         onClick={handleSubmit}
         disabled={!cedula || !file || loading}
@@ -124,7 +118,6 @@ function RegistrarTab() {
         {loading ? 'Registrando…' : 'Registrar foto de referencia'}
       </button>
 
-      {/* Resultado */}
       {result && (
         <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm ${
           result.ok
@@ -153,37 +146,33 @@ interface VerifyResult {
 }
 
 function VerificarTab() {
-  const [cedula, setCedula]       = useState('')
-  const [state, setState]         = useState<VerifyState>('idle')
+  const [cedula, setCedula]           = useState('')
+  const [state, setState]             = useState<VerifyState>('idle')
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null)
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
-  const [result, setResult]       = useState<VerifyResult | null>(null)
-  const [error, setError]         = useState<string | null>(null)
+  const [result, setResult]           = useState<VerifyResult | null>(null)
+  const [error, setError]             = useState<string | null>(null)
   const videoRef  = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
   const startCamera = useCallback(async () => {
-  setError(null)
-  try {
-    const startCamera = useCallback(async () => {
-  setError(null)
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-    })
-    streamRef.current = stream
-    setState('camera') // primero mostrar el video en el DOM
-    // pequeño delay para que React renderice el video element
-    await new Promise(r => setTimeout(r, 100))
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream
-      videoRef.current.play()
+    setError(null)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      })
+      streamRef.current = stream
+      setState('camera')
+      await new Promise(r => setTimeout(r, 100))
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.play()
+      }
+    } catch {
+      setError('No se pudo acceder a la cámara. Permite el permiso en tu navegador.')
     }
-  } catch {
-    setError('No se pudo acceder a la cámara. Permite el permiso en tu navegador.')
-  }
-}, [])
+  }, [])
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop())
@@ -191,24 +180,22 @@ function VerificarTab() {
   }
 
   function capture() {
-  if (!videoRef.current || !canvasRef.current) return
-  const v = videoRef.current
-  const c = canvasRef.current
-  
-  // Usar dimensiones reales del video, con fallback
-  const width  = v.videoWidth  || 640
-  const height = v.videoHeight || 480
-  c.width  = width
-  c.height = height
-  c.getContext('2d')!.drawImage(v, 0, 0, width, height)
-  stopCamera()
-  c.toBlob(blob => {
-    if (!blob) return
-    setCapturedBlob(blob)
-    setCapturedUrl(URL.createObjectURL(blob))
-    setState('captured')
-  }, 'image/jpeg', 0.92)
-}
+    if (!videoRef.current || !canvasRef.current) return
+    const v = videoRef.current
+    const c = canvasRef.current
+    const width  = v.videoWidth  || 640
+    const height = v.videoHeight || 480
+    c.width  = width
+    c.height = height
+    c.getContext('2d')!.drawImage(v, 0, 0, width, height)
+    stopCamera()
+    c.toBlob(blob => {
+      if (!blob) return
+      setCapturedBlob(blob)
+      setCapturedUrl(URL.createObjectURL(blob))
+      setState('captured')
+    }, 'image/jpeg', 0.92)
+  }
 
   function retake() {
     setCapturedUrl(null)
@@ -248,8 +235,6 @@ function VerificarTab() {
 
   return (
     <div className="max-w-lg mx-auto space-y-5">
-
-      {/* Cédula */}
       <div>
         <label className="block text-xs font-semibold text-ink-tertiary uppercase tracking-widest mb-1.5">
           Número de cédula
@@ -264,10 +249,8 @@ function VerificarTab() {
         />
       </div>
 
-      {/* Área de cámara */}
       <div className="relative rounded-2xl overflow-hidden bg-black" style={{ minHeight: 280 }}>
 
-        {/* Estado: idle */}
         {state === 'idle' && (
           <div className="flex flex-col items-center justify-center h-64 gap-4">
             <div className="w-16 h-16 rounded-2xl bg-blue/10 flex items-center justify-center">
@@ -287,8 +270,7 @@ function VerificarTab() {
           </div>
         )}
 
-        {/* Estado: camera */}
-        {(state === 'camera') && (
+        {state === 'camera' && (
           <>
             <video
               ref={videoRef}
@@ -297,7 +279,6 @@ function VerificarTab() {
               muted
               className="w-full h-72 object-cover"
             />
-            {/* Overlay guía */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-48 h-56 rounded-full border-2 border-white/40" />
             </div>
@@ -312,12 +293,10 @@ function VerificarTab() {
           </>
         )}
 
-        {/* Estado: captured / loading */}
         {(state === 'captured' || state === 'loading') && capturedUrl && (
           <img src={capturedUrl} alt="captured" className="w-full h-72 object-cover" />
         )}
 
-        {/* Estado: loading overlay */}
         {state === 'loading' && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <div className="text-center">
@@ -327,7 +306,6 @@ function VerificarTab() {
           </div>
         )}
 
-        {/* Estado: done */}
         {state === 'done' && result && (
           <div className={`absolute inset-0 flex flex-col items-center justify-center gap-4 ${
             result.approved ? 'bg-emerald-900/80' : 'bg-red-900/80'
@@ -353,7 +331,6 @@ function VerificarTab() {
         <canvas ref={canvasRef} className="hidden" />
       </div>
 
-      {/* Error */}
       {error && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-red-500/10 border-red-500/20 text-red-500 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -361,9 +338,8 @@ function VerificarTab() {
         </div>
       )}
 
-      {/* Acciones */}
       <div className="flex gap-3">
-        {(state === 'captured') && (
+        {state === 'captured' && (
           <>
             <button
               onClick={retake}
@@ -401,8 +377,6 @@ export default function BiometriaPage() {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
-
-        {/* Header */}
         <div>
           <h1 className="text-xl font-bold text-ink-primary tracking-tight flex items-center gap-2">
             <Fingerprint className="w-5 h-5 text-blue" />
@@ -413,7 +387,6 @@ export default function BiometriaPage() {
           </p>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-1 p-1 bg-surface-raised border border-edge rounded-xl w-fit">
           {(['verificar', 'registrar'] as Tab[]).map(t => (
             <button
@@ -430,11 +403,9 @@ export default function BiometriaPage() {
           ))}
         </div>
 
-        {/* Contenido */}
         <div className="card rounded-2xl p-6">
           {tab === 'registrar' ? <RegistrarTab /> : <VerificarTab />}
         </div>
-
       </div>
     </DashboardLayout>
   )
