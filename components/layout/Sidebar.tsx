@@ -8,6 +8,7 @@ import {
   Users, Banknote, BarChart3, FileBadge, ShoppingCart, Building2,
   BookOpen, FileEdit, BookText, Library, Inbox, Settings, Scale,
   LineChart, Lock, ChevronDown,FilePlus,FileX,FileSearch,Briefcase,ListChecks,DollarSign,Tag, TrendingUp, TrendingDown,
+  Fingerprint,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
@@ -145,6 +146,7 @@ const NAV_GROUPS: NavGroup[] = [
   defaultOpen: false,
   items: [
     { href: '/backoffice', label: 'Back Office', icon: Settings, module: 'sistema.backoffice' },
+    { href: '/biometria', label: 'Biometría', icon: Fingerprint, module: 'sistema.biometria' },
   ],
 },
     
