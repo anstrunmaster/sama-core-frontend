@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import {
   Camera, Upload, CheckCircle2, XCircle, ShieldCheck,
   ShieldX, RefreshCw, User, Fingerprint, AlertTriangle,
-  Sun, Eye, MonitorSmartphone, Info, X
+  Sun, Eye, MonitorSmartphone, Info
 } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
@@ -19,15 +19,25 @@ function getToken(): string {
 
 type Tab = 'registrar' | 'verificar'
 
+// ── ChatBubble helper ─────────────────────────────────────────────────────────
+
+function ChatBubble({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-surface-raised border border-edge rounded-2xl rounded-tl-sm px-4 py-3 text-sm">
+      {children}
+    </div>
+  )
+}
+
 // ── REGISTRAR ─────────────────────────────────────────────────────────────────
 
 function RegistrarTab() {
-  const [step, setStep]           = useState<'chat' | 'form'>('chat')
-  const [cedula, setCedula]       = useState('')
-  const [preview, setPreview]     = useState<string | null>(null)
-  const [file, setFile]           = useState<File | null>(null)
-  const [loading, setLoading]     = useState(false)
-  const [result, setResult]       = useState<{ ok: boolean; msg: string } | null>(null)
+  const [step, setStep]       = useState<'chat' | 'form'>('chat')
+  const [cedula, setCedula]   = useState('')
+  const [preview, setPreview] = useState<string | null>(null)
+  const [file, setFile]       = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [result, setResult]   = useState<{ ok: boolean; msg: string } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   function onFile(f: File) {
@@ -62,26 +72,21 @@ function RegistrarTab() {
   if (step === 'chat') {
     return (
       <div className="max-w-lg mx-auto space-y-4 py-2">
-        {/* Bubble bienvenida */}
         <div className="flex justify-center">
           <div className="w-14 h-14 rounded-full bg-blue/10 flex items-center justify-center mb-1">
             <Fingerprint className="w-7 h-7 text-blue" />
           </div>
         </div>
-
         <ChatBubble>
           <p className="font-semibold text-ink-primary">Sistema Biométrico</p>
           <p className="text-ink-secondary mt-0.5">Registra la foto de referencia de un usuario para habilitar la verificación facial.</p>
         </ChatBubble>
-
         <ChatBubble>
           <p className="font-medium text-ink-primary">📋 Ten a la mano la cédula del usuario y una foto clara de su rostro.</p>
         </ChatBubble>
-
         <ChatBubble>
           <p className="font-medium text-ink-primary">📸 La foto debe mostrar el rostro bien iluminado y sin accesorios.</p>
         </ChatBubble>
-
         <div className="flex justify-center pt-2">
           <button
             onClick={() => setStep('form')}
@@ -108,7 +113,6 @@ function RegistrarTab() {
           className="w-full px-4 py-2.5 rounded-xl bg-surface-raised border border-edge text-ink-primary text-sm placeholder:text-ink-ghost focus:outline-none focus:border-blue transition-colors"
         />
       </div>
-
       <div
         onDrop={onDrop}
         onDragOver={e => e.preventDefault()}
@@ -132,7 +136,6 @@ function RegistrarTab() {
         <input ref={inputRef} type="file" accept="image/*" className="hidden"
           onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f) }} />
       </div>
-
       <button
         onClick={handleSubmit}
         disabled={!cedula || !file || loading}
@@ -141,7 +144,6 @@ function RegistrarTab() {
         {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <User className="w-4 h-4" />}
         {loading ? 'Registrando…' : 'Registrar foto de referencia'}
       </button>
-
       {result && (
         <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm ${
           result.ok
@@ -168,11 +170,11 @@ interface VerifyResult {
 }
 
 function VerificarTab() {
-  const [state, setState]             = useState<VerifyState>('chat')
-  const [cedula, setCedula]           = useState('')
-  const [capturedUrl, setCapturedUrl] = useState<string | null>(null)
+  const [state, setState]               = useState<VerifyState>('chat')
+  const [cedula, setCedula]             = useState('')
+  const [capturedUrl, setCapturedUrl]   = useState<string | null>(null)
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
-  const [result, setResult]           = useState<VerifyResult | null>(null)
+  const [result, setResult]             = useState<VerifyResult | null>(null)
   const [attemptsLeft, setAttemptsLeft] = useState(3)
   const videoRef  = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -262,12 +264,10 @@ function VerificarTab() {
             <Fingerprint className="w-7 h-7 text-blue" />
           </div>
         </div>
-
         <ChatBubble>
           <p className="font-semibold text-ink-primary">Verificación biométrica</p>
           <p className="text-ink-secondary mt-0.5">Te damos la bienvenida al sistema de identidad digital.</p>
         </ChatBubble>
-
         <ChatBubble>
           <div className="space-y-2 text-ink-secondary text-sm">
             <div className="flex items-start gap-2">
@@ -280,13 +280,11 @@ function VerificarTab() {
             </div>
           </div>
         </ChatBubble>
-
         <ChatBubble>
           <p className="text-ink-secondary text-sm">
             Empecemos a verificar tu identidad de forma segura y en minutos 😊
           </p>
         </ChatBubble>
-
         <div className="flex justify-center pt-2">
           <button
             onClick={() => setState('cedula')}
@@ -306,7 +304,6 @@ function VerificarTab() {
         <ChatBubble>
           <p className="font-medium text-ink-primary">Perfecto ✨ Primero queremos conocerte mejor</p>
         </ChatBubble>
-
         <div className="bg-surface-raised border border-edge rounded-2xl p-5 space-y-4">
           <p className="font-semibold text-ink-primary text-sm">
             Ahora, escribe tu cédula y validaremos tu identidad
@@ -340,22 +337,22 @@ function VerificarTab() {
         <ChatBubble>
           <p className="text-ink-secondary text-sm">¿Listo para una foto rápida? 📷</p>
         </ChatBubble>
-
         <div className="mt-4 bg-surface-raised border border-edge rounded-2xl overflow-hidden">
           <div className="p-5">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4">
               <p className="font-semibold text-ink-primary text-sm">
                 Validaremos la identidad de la cédula <span className="text-blue">{cedula}</span>
               </p>
             </div>
 
-            {/* Ilustración */}
+            {/* Imagen guía principal */}
             <div className="flex justify-center mb-5">
-              <div className="relative w-32 h-32 rounded-full border-2 border-dashed border-edge flex items-center justify-center bg-surface">
-                <div className="w-20 h-20 rounded-full bg-blue/10 flex items-center justify-center">
-                  <User className="w-10 h-10 text-blue/40" />
-                </div>
-              </div>
+              <img
+                src="/principal.png"
+                alt="Guía posición rostro"
+                className="w-52 h-auto"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
             </div>
 
             <p className="font-semibold text-ink-primary text-sm mb-3">Para tomar tu foto:</p>
@@ -374,7 +371,6 @@ function VerificarTab() {
               </div>
             </div>
           </div>
-
           <div className="px-5 pb-5">
             <button
               onClick={startCamera}
@@ -400,7 +396,7 @@ function VerificarTab() {
           <div className="absolute bottom-0 inset-x-0 p-5 flex justify-center bg-gradient-to-t from-black/70">
             <button
               onClick={capture}
-              className="w-18 h-18 w-[72px] h-[72px] rounded-full bg-white flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
+              className="w-[72px] h-[72px] rounded-full bg-white flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
             >
               <div className="w-14 h-14 rounded-full bg-blue" />
             </button>
@@ -461,7 +457,9 @@ function VerificarTab() {
     return (
       <div className="max-w-lg mx-auto space-y-4 py-2">
         <div className={`rounded-2xl p-8 flex flex-col items-center gap-4 text-center ${
-          result.approved ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'
+          result.approved
+            ? 'bg-emerald-500/10 border border-emerald-500/20'
+            : 'bg-red-500/10 border border-red-500/20'
         }`}>
           {result.approved
             ? <ShieldCheck className="w-20 h-20 text-emerald-500" />
@@ -470,7 +468,9 @@ function VerificarTab() {
             <p className={`text-2xl font-bold ${result.approved ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
               {result.approved ? 'IDENTIDAD VERIFICADA' : 'NO VERIFICADO'}
             </p>
-            <p className="text-ink-tertiary text-sm mt-1">Score de similitud: <span className="font-semibold text-ink-primary">{result.score}%</span></p>
+            <p className="text-ink-tertiary text-sm mt-1">
+              Score de similitud: <span className="font-semibold text-ink-primary">{result.score}%</span>
+            </p>
             {!result.approved && result.attemptsLeft > 0 && (
               <p className="text-ink-tertiary text-xs mt-1">Intentos restantes: {result.attemptsLeft}</p>
             )}
@@ -495,38 +495,29 @@ function VerificarTab() {
   if (state === 'error') {
     return (
       <div className="max-w-lg mx-auto py-2">
-        <div className="bg-surface-raised border border-edge rounded-2xl overflow-hidden">
-          <div className="p-5 text-center space-y-4">
-            <p className="text-lg font-bold text-ink-primary">Tu foto no es válida</p>
+        <div className="bg-white dark:bg-surface-raised border border-edge rounded-3xl overflow-hidden shadow-sm">
+          <div className="p-6 text-center space-y-5">
+            <p className="text-xl font-bold text-ink-primary">Tu foto no es válida</p>
 
-            {/* Ilustración: cédula + selfie */}
-            <div className="flex items-center justify-center gap-4 py-2">
-              <div className="w-24 h-16 rounded-lg bg-surface border border-edge flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-8 h-8 rounded-full bg-ink-ghost/20 mx-auto mb-1" />
-                  <div className="space-y-0.5">
-                    <div className="h-1 w-10 bg-ink-ghost/20 rounded mx-auto" />
-                    <div className="h-1 w-8 bg-ink-ghost/20 rounded mx-auto" />
-                  </div>
-                </div>
-              </div>
-              <div className="w-16 h-24 rounded-2xl border-2 border-red-400 bg-surface flex items-center justify-center relative">
-                <User className="w-8 h-8 text-ink-ghost/40" />
-                <div className="absolute bottom-1.5 inset-x-0 flex justify-center">
-                  <div className="w-6 h-1.5 rounded-full bg-red-400" />
-                </div>
-              </div>
+            {/* Imagen error */}
+            <div className="flex justify-center py-2">
+              <img
+                src="/error.png"
+                alt="Foto no válida"
+                className="w-64 h-auto"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
             </div>
 
-            <p className="text-ink-secondary text-sm">
+            <p className="text-ink-secondary text-sm leading-relaxed">
               Para validar tu identidad, asegúrate de que tu foto se parezca a la de tu cédula. Inténtalo de nuevo.
             </p>
-            <p className="text-ink-tertiary text-xs">Intentos restantes: {attemptsLeft}</p>
+            <p className="text-ink-tertiary text-xs">Intentos restantes: <span className="font-semibold">{attemptsLeft}</span></p>
           </div>
-          <div className="px-5 pb-5">
+          <div className="px-6 pb-6">
             <button
               onClick={retake}
-              className="w-full py-3 rounded-full bg-blue text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-blue/90 transition-colors"
+              className="w-full py-3.5 rounded-full bg-blue text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-blue/90 transition-colors"
             >
               <RefreshCw className="w-4 h-4" /> Tomar otra foto
             </button>
@@ -541,44 +532,36 @@ function VerificarTab() {
   if (state === 'last-attempt') {
     return (
       <div className="max-w-lg mx-auto py-2">
-        <div className="bg-surface-raised border border-orange-400/30 rounded-2xl overflow-hidden">
-          <div className="p-5 text-center space-y-4">
-            <p className="text-lg font-bold text-ink-primary">Este es tu último intento</p>
+        <div className="bg-white dark:bg-surface-raised border border-orange-300/50 rounded-3xl overflow-hidden shadow-sm">
+          <div className="p-6 text-center space-y-5">
+            <p className="text-xl font-bold text-ink-primary">Este es tu último intento</p>
 
-            <div className="flex items-center justify-center gap-4 py-2">
-              <div className="w-24 h-16 rounded-lg bg-surface border border-edge flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-8 h-8 rounded-full bg-ink-ghost/20 mx-auto mb-1" />
-                  <div className="space-y-0.5">
-                    <div className="h-1 w-10 bg-ink-ghost/20 rounded mx-auto" />
-                    <div className="h-1 w-8 bg-ink-ghost/20 rounded mx-auto" />
-                  </div>
-                </div>
-              </div>
-              <div className="w-16 h-24 rounded-2xl border-2 border-orange-400 bg-surface flex items-center justify-center relative">
-                <User className="w-8 h-8 text-ink-ghost/40" />
-                <div className="absolute bottom-1.5 inset-x-0 flex justify-center">
-                  <div className="w-6 h-1.5 rounded-full bg-orange-400" />
-                </div>
-              </div>
+            {/* Imagen error (mismo SVG, estado de alerta) */}
+            <div className="flex justify-center py-2">
+              <img
+                src="/error.png"
+                alt="Último intento"
+                className="w-64 h-auto"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
             </div>
 
-            <p className="text-ink-secondary text-sm">
+            <p className="text-ink-secondary text-sm leading-relaxed">
               Para validar tu identidad, asegúrate de que tu foto se parezca a la de tu cédula.
               Tómala en un lugar bien iluminado, sin accesorios y con el rostro centrado.
             </p>
 
-            <div className="bg-blue/5 border border-blue/20 rounded-xl p-3 flex items-start gap-2 text-left">
+            <div className="bg-blue/5 border border-blue/20 rounded-2xl p-3 flex items-start gap-2 text-left">
               <Info className="w-4 h-4 text-blue shrink-0 mt-0.5" />
               <p className="text-xs text-ink-secondary">
                 Si no podemos verificar tu identidad, vuelve a intentarlo en 24 horas.
               </p>
             </div>
           </div>
-          <div className="px-5 pb-5">
+          <div className="px-6 pb-6">
             <button
               onClick={retake}
-              className="w-full py-3 rounded-full bg-blue text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-blue/90 transition-colors"
+              className="w-full py-3.5 rounded-full bg-blue text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-blue/90 transition-colors"
             >
               <RefreshCw className="w-4 h-4" /> Tomar otra foto
             </button>
@@ -590,16 +573,6 @@ function VerificarTab() {
   }
 
   return null
-}
-
-// ── ChatBubble helper ─────────────────────────────────────────────────────────
-
-function ChatBubble({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="bg-surface-raised border border-edge rounded-2xl rounded-tl-sm px-4 py-3 text-sm">
-      {children}
-    </div>
-  )
 }
 
 // ── Página principal ──────────────────────────────────────────────────────────
