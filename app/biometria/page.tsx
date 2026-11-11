@@ -260,11 +260,7 @@ function VerificarTab() {
     return (
       <div className="max-w-lg mx-auto space-y-4 py-2">
         <div className="flex justify-center">
-          <div className="w-14 h-14 rounded-full bg-blue/10 flex items-center justify-center">
-            <Fingerprint className="w-7 h-7 text-blue" />
-          </div>
-        </div>
-        <div className="flex justify-center">
+          
   <img
     src="/bienvenida.png"
     alt="Bienvenida biométrica"
