@@ -264,7 +264,7 @@ function VerificarTab() {
   <img
     src="/bienvenida.png"
     alt="Bienvenida biométrica"
-    className="w-52 h-auto"
+    className="w-96 h-auto" 
     onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
   />
 </div>
@@ -354,7 +354,7 @@ function VerificarTab() {
               <img
                 src="/principal.png"
                 alt="Guía posición rostro"
-                className="w-52 h-auto"
+                className="w-102 h-auto"
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
               />
             </div>
