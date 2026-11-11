@@ -166,19 +166,20 @@ function VerificarTab() {
   const startCamera = useCallback(async () => {
   setError(null)
   try {
+    const startCamera = useCallback(async () => {
+  setError(null)
+  try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
     })
     streamRef.current = stream
+    setState('camera') // primero mostrar el video en el DOM
+    // pequeño delay para que React renderice el video element
+    await new Promise(r => setTimeout(r, 100))
     if (videoRef.current) {
       videoRef.current.srcObject = stream
-      // Esperar que el video tenga datos antes de mostrar el botón
-      await new Promise<void>(resolve => {
-        videoRef.current!.onloadeddata = () => resolve()
-        videoRef.current!.play()
-      })
+      videoRef.current.play()
     }
-    setState('camera')
   } catch {
     setError('No se pudo acceder a la cámara. Permite el permiso en tu navegador.')
   }
@@ -190,20 +191,24 @@ function VerificarTab() {
   }
 
   function capture() {
-    if (!videoRef.current || !canvasRef.current) return
-    const v = videoRef.current
-    const c = canvasRef.current
-    c.width  = v.videoWidth
-    c.height = v.videoHeight
-    c.getContext('2d')!.drawImage(v, 0, 0)
-    stopCamera()
-    c.toBlob(blob => {
-      if (!blob) return
-      setCapturedBlob(blob)
-      setCapturedUrl(URL.createObjectURL(blob))
-      setState('captured')
-    }, 'image/jpeg', 0.92)
-  }
+  if (!videoRef.current || !canvasRef.current) return
+  const v = videoRef.current
+  const c = canvasRef.current
+  
+  // Usar dimensiones reales del video, con fallback
+  const width  = v.videoWidth  || 640
+  const height = v.videoHeight || 480
+  c.width  = width
+  c.height = height
+  c.getContext('2d')!.drawImage(v, 0, 0, width, height)
+  stopCamera()
+  c.toBlob(blob => {
+    if (!blob) return
+    setCapturedBlob(blob)
+    setCapturedUrl(URL.createObjectURL(blob))
+    setState('captured')
+  }, 'image/jpeg', 0.92)
+}
 
   function retake() {
     setCapturedUrl(null)
