@@ -288,8 +288,14 @@ function VerificarTab() {
       const form = new FormData()
       form.append('photo', capturedBlob, 'captured.jpg')
       form.append('cedula', cedula)
-      // geo solo se usa para validación visual en el FE
-      // para persistirlo agregar los campos al DTO del backend (biometric/verify)
+      if (geoCoords) {
+        form.append('latitude',  geoCoords.latitude.toString())
+        form.append('longitude', geoCoords.longitude.toString())
+        form.append('accuracy',  geoCoords.accuracy.toString())
+        form.append('geo_country',  geoCoords.country)
+        form.append('geo_province', geoCoords.province)
+        form.append('geo_city',     geoCoords.city)
+      }
       const res = await fetch(`${API_URL}/biometric/verify`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${getToken()}` },
