@@ -167,38 +167,18 @@ interface VerifyResult {
   score: number
   attemptsLeft: number
   blocked: boolean
+  geoLocation?: { country: string; province: string; city: string } | null
 }
 
 interface GeoCoords {
   latitude: number
   longitude: number
   accuracy: number
-  country:  string
-  province: string
-  city:     string
 }
 
 // Ecuador bounding box (holgado para incluir Galápagos)
 function isInsideEcuador(lat: number, lng: number): boolean {
   return lat >= -5.5 && lat <= 1.5 && lng >= -92.5 && lng <= -74.5
-}
-
-async function reverseGeocode(lat: number, lng: number): Promise<{ country: string; province: string; city: string }> {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=es`,
-      { headers: { 'User-Agent': 'Syntra/2.0 (teusec.com)' } }
-    )
-    const data = await res.json()
-    const a = data.address ?? {}
-    return {
-      country:  a.country  ?? '—',
-      province: a.state    ?? a.province ?? '—',
-      city:     a.city     ?? a.town ?? a.municipality ?? a.county ?? '—',
-    }
-  } catch {
-    return { country: '—', province: '—', city: '—' }
-  }
 }
 
 function VerificarTab() {
@@ -215,7 +195,6 @@ function VerificarTab() {
   const streamRef = useRef<MediaStream | null>(null)
 
   const startCamera = useCallback(async () => {
-    // 1. Pedir ubicación primero (en paralelo con la cámara)
     setGeoError(null)
     const geoPromise = new Promise<GeoCoords | null>(resolve => {
       if (!navigator.geolocation) { resolve(null); return }
@@ -231,7 +210,6 @@ function VerificarTab() {
     })
 
     try {
-      // 2. Abrir cámara
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
       })
@@ -247,15 +225,14 @@ function VerificarTab() {
       return
     }
 
-    // 3. Cuando llegan las coords: reverse geocode y validar país
-    geoPromise.then(async raw => {
-      if (!raw) return  // permiso denegado → continuar sin ubicación
+    // Validar ubicación cuando llegan las coords (reverse geocode lo hace el backend)
+    geoPromise.then(raw => {
+      if (!raw) return
       if (!isInsideEcuador(raw.latitude, raw.longitude)) {
         setGeoError('Tu ubicación está fuera de Ecuador. La verificación no puede continuar.')
         return
       }
-      const place = await reverseGeocode(raw.latitude, raw.longitude)
-      setGeoCoords({ ...raw, ...place })
+      setGeoCoords(raw)
     })
   }, [])
 
@@ -288,13 +265,10 @@ function VerificarTab() {
       const form = new FormData()
       form.append('photo', capturedBlob, 'captured.jpg')
       form.append('cedula', cedula)
+      // Solo lat/lng — el backend hace el reverse geocoding
       if (geoCoords) {
         form.append('latitude',  geoCoords.latitude.toString())
         form.append('longitude', geoCoords.longitude.toString())
-        form.append('accuracy',  geoCoords.accuracy.toString())
-        form.append('geo_country',  geoCoords.country)
-        form.append('geo_province', geoCoords.province)
-        form.append('geo_city',     geoCoords.city)
       }
       const res = await fetch(`${API_URL}/biometric/verify`, {
         method: 'POST',
@@ -416,7 +390,6 @@ function VerificarTab() {
               </p>
             </div>
 
-            {/* Imagen guía principal */}
             <div className="flex justify-center mb-5">
               <img
                 src="/principal.png"
@@ -457,7 +430,6 @@ function VerificarTab() {
 
   // ── CÁMARA ──
   if (state === 'camera') {
-    // Bloqueo si la ubicación confirma que está fuera de Ecuador
     if (geoError) {
       stopCamera()
       return (
@@ -512,16 +484,16 @@ function VerificarTab() {
           <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
             <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
             <div className="text-sm leading-snug">
-              <p className="font-semibold text-ink-primary">Ubicación verificada</p>
+              <p className="font-semibold text-ink-primary">Ubicación capturada</p>
               <p className="text-ink-secondary mt-0.5">
-                {geoCoords.country} · {geoCoords.province} · {geoCoords.city}
+                {geoCoords.latitude.toFixed(4)}, {geoCoords.longitude.toFixed(4)}
               </p>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-raised border border-edge">
             <MapPin className="w-4 h-4 text-ink-ghost shrink-0" />
-            <p className="text-sm text-ink-tertiary">Obteniendo ubicación…</p>
+            <p className="text-sm text-ink-tertiary">Sin ubicación (opcional)</p>
           </div>
         )}
 
@@ -589,6 +561,15 @@ function VerificarTab() {
                 <AlertTriangle className="w-4 h-4" /> Cuenta bloqueada temporalmente
               </div>
             )}
+            {/* Ubicación resuelta por el backend */}
+            {result.geoLocation && (
+              <div className="mt-3 flex items-center justify-center gap-2 text-sm text-ink-secondary">
+                <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span>
+                  {result.geoLocation.country} · {result.geoLocation.province} · {result.geoLocation.city}
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <button
@@ -609,7 +590,6 @@ function VerificarTab() {
           <div className="p-6 text-center space-y-5">
             <p className="text-xl font-bold text-ink-primary">Tu foto no es válida</p>
 
-            {/* Imagen error */}
             <div className="flex justify-center py-2">
               <img
                 src="/error.png"
@@ -646,7 +626,6 @@ function VerificarTab() {
           <div className="p-6 text-center space-y-5">
             <p className="text-xl font-bold text-ink-primary">Este es tu último intento</p>
 
-            {/* Imagen error (mismo SVG, estado de alerta) */}
             <div className="flex justify-center py-2">
               <img
                 src="/error.png"
