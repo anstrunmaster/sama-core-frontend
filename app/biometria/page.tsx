@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import {
   Camera, Upload, CheckCircle2, XCircle, ShieldCheck,
   ShieldX, RefreshCw, User, Fingerprint, AlertTriangle,
-  Sun, Eye, MonitorSmartphone, Info
+  Sun, Eye, MonitorSmartphone, Info, MapPin
 } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://d16rb4jhhui7p6.cloudfront.net/api/v1'
@@ -169,6 +169,38 @@ interface VerifyResult {
   blocked: boolean
 }
 
+interface GeoCoords {
+  latitude: number
+  longitude: number
+  accuracy: number
+  country:  string
+  province: string
+  city:     string
+}
+
+// Ecuador bounding box (holgado para incluir Galápagos)
+function isInsideEcuador(lat: number, lng: number): boolean {
+  return lat >= -5.5 && lat <= 1.5 && lng >= -92.5 && lng <= -74.5
+}
+
+async function reverseGeocode(lat: number, lng: number): Promise<{ country: string; province: string; city: string }> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=es`,
+      { headers: { 'User-Agent': 'Syntra/2.0 (teusec.com)' } }
+    )
+    const data = await res.json()
+    const a = data.address ?? {}
+    return {
+      country:  a.country  ?? '—',
+      province: a.state    ?? a.province ?? '—',
+      city:     a.city     ?? a.town ?? a.municipality ?? a.county ?? '—',
+    }
+  } catch {
+    return { country: '—', province: '—', city: '—' }
+  }
+}
+
 function VerificarTab() {
   const [state, setState]               = useState<VerifyState>('chat')
   const [cedula, setCedula]             = useState('')
@@ -176,12 +208,30 @@ function VerificarTab() {
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null)
   const [result, setResult]             = useState<VerifyResult | null>(null)
   const [attemptsLeft, setAttemptsLeft] = useState(3)
+  const [geoCoords, setGeoCoords]       = useState<GeoCoords | null>(null)
+  const [geoError, setGeoError]         = useState<string | null>(null)
   const videoRef  = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
   const startCamera = useCallback(async () => {
+    // 1. Pedir ubicación primero (en paralelo con la cámara)
+    setGeoError(null)
+    const geoPromise = new Promise<GeoCoords | null>(resolve => {
+      if (!navigator.geolocation) { resolve(null); return }
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({
+          latitude:  pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy:  pos.coords.accuracy,
+        }),
+        () => resolve(null),
+        { timeout: 8000, maximumAge: 60000 }
+      )
+    })
+
     try {
+      // 2. Abrir cámara
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
       })
@@ -194,7 +244,19 @@ function VerificarTab() {
       }
     } catch {
       setState('cedula')
+      return
     }
+
+    // 3. Cuando llegan las coords: reverse geocode y validar país
+    geoPromise.then(async raw => {
+      if (!raw) return  // permiso denegado → continuar sin ubicación
+      if (!isInsideEcuador(raw.latitude, raw.longitude)) {
+        setGeoError('Tu ubicación está fuera de Ecuador. La verificación no puede continuar.')
+        return
+      }
+      const place = await reverseGeocode(raw.latitude, raw.longitude)
+      setGeoCoords({ ...raw, ...place })
+    })
   }, [])
 
   function stopCamera() {
@@ -226,6 +288,14 @@ function VerificarTab() {
       const form = new FormData()
       form.append('photo', capturedBlob, 'captured.jpg')
       form.append('cedula', cedula)
+      if (geoCoords) {
+        form.append('latitude',  geoCoords.latitude.toString())
+        form.append('longitude', geoCoords.longitude.toString())
+        form.append('accuracy',  geoCoords.accuracy.toString())
+        form.append('geo_country',  geoCoords.country)
+        form.append('geo_province', geoCoords.province)
+        form.append('geo_city',     geoCoords.city)
+      }
       const res = await fetch(`${API_URL}/biometric/verify`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${getToken()}` },
@@ -252,7 +322,8 @@ function VerificarTab() {
 
   function reset() {
     setCedula(''); setCapturedUrl(null); setCapturedBlob(null)
-    setResult(null); setAttemptsLeft(3); setState('chat')
+    setResult(null); setAttemptsLeft(3); setGeoCoords(null); setGeoError(null)
+    setState('chat')
   }
 
   // ── CHAT inicial ──
@@ -260,14 +331,10 @@ function VerificarTab() {
     return (
       <div className="max-w-lg mx-auto space-y-4 py-2">
         <div className="flex justify-center">
-          
-  <img
-    src="/bienvenida.png"
-    alt="Bienvenida biométrica"
-    className="w-96 h-auto" 
-    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-  />
-</div>
+          <div className="w-14 h-14 rounded-full bg-blue/10 flex items-center justify-center">
+            <Fingerprint className="w-7 h-7 text-blue" />
+          </div>
+        </div>
         <ChatBubble>
           <p className="font-semibold text-ink-primary">Verificación biométrica</p>
           <p className="text-ink-secondary mt-0.5">Te damos la bienvenida al sistema de identidad digital.</p>
@@ -306,7 +373,7 @@ function VerificarTab() {
     return (
       <div className="max-w-lg mx-auto space-y-4 py-2">
         <ChatBubble>
-          <p className="font-medium text-ink-primary">Perfecto - Primero queremos saber que eres tú</p>
+          <p className="font-medium text-ink-primary">Perfecto ✨ Primero queremos conocerte mejor</p>
         </ChatBubble>
         <div className="bg-surface-raised border border-edge rounded-2xl p-5 space-y-4">
           <p className="font-semibold text-ink-primary text-sm">
@@ -354,7 +421,7 @@ function VerificarTab() {
               <img
                 src="/principal.png"
                 alt="Guía posición rostro"
-                className="w-102 h-auto"
+                className="w-52 h-auto"
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
               />
             </div>
@@ -390,6 +457,26 @@ function VerificarTab() {
 
   // ── CÁMARA ──
   if (state === 'camera') {
+    // Bloqueo si la ubicación confirma que está fuera de Ecuador
+    if (geoError) {
+      stopCamera()
+      return (
+        <div className="max-w-lg mx-auto py-2">
+          <div className="bg-white dark:bg-surface-raised border border-red-300/50 rounded-3xl p-6 text-center space-y-4">
+            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto" />
+            <p className="text-lg font-bold text-ink-primary">Ubicación no permitida</p>
+            <p className="text-ink-secondary text-sm leading-relaxed">{geoError}</p>
+            <button
+              onClick={reset}
+              className="w-full py-3 rounded-full border border-edge text-ink-secondary text-sm font-semibold hover:border-edge-strong transition-colors"
+            >
+              Volver al inicio
+            </button>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="max-w-lg mx-auto py-2">
         <div className="relative rounded-2xl overflow-hidden bg-black" style={{ minHeight: 320 }}>
@@ -419,6 +506,25 @@ function VerificarTab() {
           {capturedUrl && <img src={capturedUrl} alt="captured" className="w-full h-80 object-cover" />}
         </div>
         <canvas ref={canvasRef} className="hidden" />
+
+        {/* Tarjeta de ubicación */}
+        {geoCoords ? (
+          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20">
+            <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+            <div className="text-sm leading-snug">
+              <p className="font-semibold text-ink-primary">Ubicación verificada</p>
+              <p className="text-ink-secondary mt-0.5">
+                {geoCoords.country} · {geoCoords.province} · {geoCoords.city}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-raised border border-edge">
+            <MapPin className="w-4 h-4 text-ink-ghost shrink-0" />
+            <p className="text-sm text-ink-tertiary">Obteniendo ubicación…</p>
+          </div>
+        )}
+
         <div className="flex gap-3">
           <button
             onClick={retake}
@@ -593,7 +699,7 @@ export default function BiometriaPage() {
             Verificación biométrica
           </h1>
           <p className="text-sm text-ink-tertiary mt-0.5">
-            Portal de identificación de identidades mediante reconocimiento facial
+            Registra y verifica identidades mediante reconocimiento facial
           </p>
         </div>
 
