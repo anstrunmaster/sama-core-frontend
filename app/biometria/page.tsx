@@ -277,9 +277,29 @@ function VerificarTab() {
       })
       const json = await res.json()
       if (res.ok && json.success) {
-        setResult(json.data)
-        setState('done')
-      } else {
+  setResult(json.data)
+
+  // LOG DEMO — eliminar en producción
+  const data = json.data
+  const geo = data.geoLocation
+  console.group('TRANSACCION BIOMETRICA')
+  console.log('Timestamp:       ', new Date().toISOString())
+  console.log('Cedula:          ', cedula)
+  console.log('Aprobado:        ', data.approved)
+  console.log('Score:           ', data.score + '%')
+  console.log('Intentos left:   ', data.attemptsLeft)
+  console.log('Bloqueado:       ', data.blocked)
+  console.log('Pais:            ', geo?.country ?? 'N/A')
+  console.log('Provincia:       ', geo?.province ?? 'N/A')
+  console.log('Ciudad:          ', geo?.city ?? 'N/A')
+  console.log('Coordenadas:     ', geoCoords ? `${geoCoords.latitude}, ${geoCoords.longitude}` : 'N/A')
+  console.log('Precision GPS:   ', geoCoords ? geoCoords.accuracy + 'm' : 'N/A')
+  console.log('User Agent:      ', navigator.userAgent)
+  console.log('Payload DB:      ', { cedula, aprobado: data.approved, score: data.score, timestamp: new Date().toISOString(), geoLocation: geo, coordenadas: geoCoords, userAgent: navigator.userAgent })
+  console.groupEnd()
+
+  setState('done')
+} else {
         const left = json.data?.attemptsLeft ?? (attemptsLeft - 1)
         setAttemptsLeft(left)
         setState(left <= 1 ? 'last-attempt' : 'error')
